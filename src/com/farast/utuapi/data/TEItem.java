@@ -7,9 +7,7 @@ import java.util.List;
 /**
  * Created by cendr_000 on 27.07.2016.
  */
-public interface TEItem {
-
-    int getId();
+public interface TEItem extends Identifiable {
 
     String getTitle();
 
