@@ -20,6 +20,8 @@ public class DataLoader {
 
     private String baseUrl;
 
+    private Sclass lastSclassLoaded;
+
     private OperationManager operationListeners = new OperationManager();
 
     private Predata predata;
@@ -58,11 +60,13 @@ public class DataLoader {
     }
 
     public void load(Sclass sclass) throws IOException, SAXException, NumberFormatException, CollectionUtil.RecordNotFoundException, CollectionUtil.MultipleRecordsWithSameIdException, DateFormatException {
+        lastSclassLoaded = null;
         if (!predata.isLoaded()) {
             predata.load();
         }
         loadTimetablesData(sclass);
         loadUtuData(sclass);
+        lastSclassLoaded = sclass;
     }
 
     private void loadTimetablesData(Sclass sclass) throws IOException, SAXException {
@@ -354,6 +358,10 @@ public class DataLoader {
 
     public OperationManager getOperationManager() {
         return operationListeners;
+    }
+
+    public boolean isLoaded() {
+        return lastSclassLoaded != null;
     }
 
     public static class PredataNotLoadedException extends RuntimeException {
