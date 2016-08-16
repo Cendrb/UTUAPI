@@ -8,8 +8,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.*;
 import java.text.ParseException;
 import java.util.*;
 
@@ -33,6 +33,9 @@ public class DataLoader {
     private List<Timetable> timetablesList;
     private List<Lesson> lessonsList;
 
+    private boolean loggedIn;
+    private boolean adminLoggedIn;
+
     public DataLoader(String url) {
         baseUrl = url;
         additionalInfosList = new ArrayList<>();
@@ -43,10 +46,43 @@ public class DataLoader {
         timetablesList = new ArrayList<>();
         lessonsList = new ArrayList<>();
         predata = new Predata();
+
+        // automatically save cookies
+        CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+        CookieHandler.setDefault(cookieManager);
     }
 
     public void loadPredata() throws IOException, SAXException, NumberFormatException {
         predata.load();
+    }
+
+    public boolean login(String username, String password) throws IOException {
+        operationListeners.startOperation(new LoggingInOperation());
+        URL url = new URL(baseUrl + "/login.whoa");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setConnectTimeout(10000);
+        connection.setReadTimeout(10000);
+        connection.setDoOutput(true);
+        connection.setDoInput(true);
+        connection.setRequestMethod("POST");
+
+        HashMap<String, String> formData = new HashMap<>();
+        formData.put("email", username);
+        formData.put("password", password);
+
+        OutputStream outputStream = connection.getOutputStream();
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+        writer.write(HTTPUtil.getPostDataString(formData));
+        writer.flush();
+        writer.close();
+        outputStream.close();
+
+        connection.getResponseCode();
+
+        Scanner scanner = new Scanner(connection.getInputStream()).useDelimiter("\\A");
+        String dogshit = scanner.hasNext() ? scanner.next() : "";
+        operationListeners.endOperation();
+        return dogshit.equals("success");
     }
 
     public void load(int sclassId) throws IOException, SAXException, NumberFormatException, CollectionUtil.RecordNotFoundException, CollectionUtil.MultipleRecordsWithSameIdException, DateFormatException, SclassDoesNotExistException {
@@ -120,9 +156,10 @@ public class DataLoader {
                     timetablesList.add(new Timetable(id, name, sgroups, schoolDays));
                 }
             });
-            operationListeners.endOperation();
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
+        } finally {
+            operationListeners.endOperation();
         }
     }
 
@@ -130,7 +167,12 @@ public class DataLoader {
         try {
             operationListeners.startOperation(new UtuDataOperation());
             InputStream responseStream = HTTPUtil.openStream(baseUrl + "/api/data?sclass_id=" + sclass.getId());
+
             Element utuElement = XMLUtil.parseXml(responseStream);
+
+            Element currentUserElement = XMLUtil.getElement(utuElement, "current_user");
+            loggedIn = XMLUtil.getAndParseBooleanValueOfChild(currentUserElement, "logged_in");
+            adminLoggedIn = XMLUtil.getAndParseBooleanValueOfChild(currentUserElement, "admin_logged_in");
 
             // additional infos
             final NodeList additionalInfos = XMLUtil.getNodeList(utuElement, "additional_infos_global", "additional_info");
@@ -279,8 +321,7 @@ public class DataLoader {
             });
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
             operationListeners.endOperation();
         }
     }
@@ -333,8 +374,7 @@ public class DataLoader {
         return new ArrayList<>(tasksList);
     }
 
-    public List<TEItem> getTEsList()
-    {
+    public List<TEItem> getTEsList() {
         List<TEItem> teItems = new ArrayList<>();
         teItems.addAll(tasksList);
         teItems.addAll(examsList);
@@ -473,8 +513,7 @@ public class DataLoader {
                 loaded = true;
             } catch (ParserConfigurationException e) {
                 e.printStackTrace();
-            }
-            finally {
+            } finally {
                 operationListeners.endOperation();
             }
         }

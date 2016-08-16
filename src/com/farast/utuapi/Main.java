@@ -11,6 +11,7 @@ public class Main {
     public static void main(String[] args) {
         DataLoader loader = new DataLoader("http://localhost:3000");
         try {
+            boolean res = loader.login("penis@gmail.com", "penis");
             loader.loadPredata();
             loader.load(1);
         } catch (IOException e) {
