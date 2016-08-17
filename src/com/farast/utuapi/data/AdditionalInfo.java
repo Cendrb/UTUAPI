@@ -31,4 +31,9 @@ public class AdditionalInfo implements Identifiable {
     public Subject getSubject() {
         return subject;
     }
+
+    @Override
+    public String toString() {
+        return subject.getName() + " " + getName();
+    }
 }
