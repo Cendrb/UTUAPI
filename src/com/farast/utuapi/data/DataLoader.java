@@ -431,6 +431,10 @@ public class DataLoader {
         return new ArrayList<>(articlesList);
     }
 
+    public List<Sgroup> getSgroupsList() {
+        return predata.sgroupsList;
+    }
+
     public boolean isPredataLoaded() {
         return predata.isLoaded();
     }
