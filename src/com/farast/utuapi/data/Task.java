@@ -1,13 +1,16 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.util.FormData;
+
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Task implements Identifiable, TEItem {
+public class Task extends GenericUtuItem implements Identifiable, TEItem {
     private int id;
     private String title;
     private String description;
@@ -25,7 +28,7 @@ public class Task implements Identifiable, TEItem {
         this.date = new Date(date.getTime());
         this.subject = subject;
         this.sgroup = sgroup;
-        this.additionalInfos = additionalInfos;
+        this.additionalInfos = new ArrayList<>(additionalInfos);
         this.done = done;
         this.lessons = lessons;
     }
@@ -64,5 +67,24 @@ public class Task implements Identifiable, TEItem {
 
     public List<Lesson> getLessons() {
         return new ArrayList<>(lessons);
+    }
+
+    @Override
+    FormData getFormData() {
+        FormData formData = new FormData();
+        if (id != -1)
+            formData.put("id", id);
+        formData.put("title", title);
+        formData.put("description", description);
+        formData.put("date", date);
+        formData.put("subject_id", subject);
+        formData.put("sgroup_id", sgroup);
+        formData.put("additional_info_ids", additionalInfos);
+        return formData;
+    }
+
+    @Override
+    String getTypeString() {
+        return "task";
     }
 }

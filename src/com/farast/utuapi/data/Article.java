@@ -1,5 +1,7 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.util.FormData;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -7,7 +9,7 @@ import java.util.List;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Article implements Identifiable {
+public class Article extends GenericUtuItem implements Identifiable {
     private int id;
     private String title;
     private String description;
@@ -21,7 +23,7 @@ public class Article implements Identifiable {
         this.description = description;
         this.publishedOn = new Date(publishedOn.getTime());
         this.sgroup = sgroup;
-        this.additionalInfos = additionalInfos;
+        this.additionalInfos = new ArrayList<>(additionalInfos);
     }
 
     @Override
@@ -47,5 +49,23 @@ public class Article implements Identifiable {
 
     public List<AdditionalInfo> getAdditionalInfos() {
         return new ArrayList<>(additionalInfos);
+    }
+
+    @Override
+    FormData getFormData() {
+        FormData formData = new FormData();
+        if (id != -1)
+            formData.put("id", id);
+        formData.put("title", title);
+        formData.put("description", description);
+        formData.put("published_on", publishedOn);
+        formData.put("sgroup_id", sgroup);
+        formData.put("additional_info_ids", additionalInfos);
+        return formData;
+    }
+
+    @Override
+    String getTypeString() {
+        return "article";
     }
 }

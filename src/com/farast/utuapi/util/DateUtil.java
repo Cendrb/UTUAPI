@@ -10,9 +10,9 @@ public final class DateUtil {
 
     }
 
-    public static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-DD HH:mm:ss zzz");
-    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-DD");
-    public static final SimpleDateFormat CZ_SHORT_DATE_FORMAT = new SimpleDateFormat("DD. MM.");
-    public static final SimpleDateFormat CZ_DATE_FORMAT = new SimpleDateFormat("DD. MM. yyyy");
-    public static final SimpleDateFormat CZ_WEEK_DATE_FORMAT = new SimpleDateFormat("EEE DD. MM.");
+    public static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss zzz");
+    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    public static final SimpleDateFormat CZ_SHORT_DATE_FORMAT = new SimpleDateFormat("dd. MM.");
+    public static final SimpleDateFormat CZ_DATE_FORMAT = new SimpleDateFormat("dd. MM. yyyy");
+    public static final SimpleDateFormat CZ_WEEK_DATE_FORMAT = new SimpleDateFormat("EEE dd. MM.");
 }

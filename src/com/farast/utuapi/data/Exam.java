@@ -1,13 +1,17 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.util.FormData;
+
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Exam implements Identifiable, TEItem {
+public class Exam extends GenericUtuItem implements Identifiable, TEItem {
+
     private int id;
     private String title;
     private String description;
@@ -17,17 +21,18 @@ public class Exam implements Identifiable, TEItem {
     private List<AdditionalInfo> additionalInfos;
     private boolean done;
     private List<Lesson> lessons;
-
-    Exam(int id, String title, String description, Date date, Subject subject, Sgroup sgroup, List<AdditionalInfo> additionalInfos, boolean done, List<Lesson> lessons) {
+    private Type type;
+    Exam(int id, String title, String description, Date date, Subject subject, Sgroup sgroup, List<AdditionalInfo> additionalInfos, boolean done, List<Lesson> lessons, Type type) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.date = new Date(date.getTime());
         this.subject = subject;
         this.sgroup = sgroup;
-        this.additionalInfos = additionalInfos;
+        this.additionalInfos = new ArrayList<>(additionalInfos);
         this.done = done;
         this.lessons = lessons;
+        this.type = type;
     }
 
     public int getId() {
@@ -65,4 +70,37 @@ public class Exam implements Identifiable, TEItem {
     public List<Lesson> getLessons() {
         return new ArrayList<>(lessons);
     }
+
+    @Override
+    FormData getFormData() {
+        FormData formData = new FormData();
+        if (id != -1)
+            formData.put("id", id);
+        formData.put("title", title);
+        formData.put("description", description);
+        formData.put("date", date);
+        formData.put("subject_id", subject);
+        formData.put("sgroup_id", sgroup);
+        formData.put("additional_info_ids", additionalInfos);
+        return formData;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    @Override
+    String getTypeString() {
+        switch (type)
+        {
+            case written:
+                return "written_exam";
+            case raking:
+                return "raking_exam";
+            default:
+                return "this type of Exam is not supported";
+        }
+    }
+
+    public enum Type {raking, written}
 }

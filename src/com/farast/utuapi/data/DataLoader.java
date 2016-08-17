@@ -20,11 +20,15 @@ public class DataLoader {
 
     private String baseUrl;
 
-    private Sclass lastSclassLoaded;
+    private boolean dataLoaded;
+
+    private Sclass lastSclass = null;
 
     private OperationManager operationListeners = new OperationManager();
 
     private Predata predata;
+    private CreateUpdate editor;
+
     private List<AdditionalInfo> additionalInfosList;
     private List<Event> eventsList;
     private List<Exam> examsList;
@@ -33,8 +37,7 @@ public class DataLoader {
     private List<Timetable> timetablesList;
     private List<Lesson> lessonsList;
 
-    private boolean loggedIn;
-    private boolean adminLoggedIn;
+    private User currentUser = null;
 
     public DataLoader(String url) {
         baseUrl = url;
@@ -46,6 +49,7 @@ public class DataLoader {
         timetablesList = new ArrayList<>();
         lessonsList = new ArrayList<>();
         predata = new Predata();
+        editor = new CreateUpdate();
 
         // automatically save cookies
         CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
@@ -56,33 +60,44 @@ public class DataLoader {
         predata.load();
     }
 
-    public boolean login(String username, String password) throws IOException {
-        operationListeners.startOperation(new LoggingInOperation());
-        URL url = new URL(baseUrl + "/login.whoa");
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setConnectTimeout(10000);
-        connection.setReadTimeout(10000);
-        connection.setDoOutput(true);
-        connection.setDoInput(true);
-        connection.setRequestMethod("POST");
+    public boolean login(String email, String password) throws IOException {
+        try {
+            operationListeners.startOperation(new LoggingInOperation());
+            URL url = new URL(baseUrl + "/login.xml");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoOutput(true);
+            connection.setDoInput(true);
+            connection.setRequestMethod("POST");
 
-        HashMap<String, String> formData = new HashMap<>();
-        formData.put("email", username);
-        formData.put("password", password);
+            HashMap<String, String> formData = new HashMap<>();
+            formData.put("email", email);
+            formData.put("password", password);
 
-        OutputStream outputStream = connection.getOutputStream();
-        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-        writer.write(HTTPUtil.getPostDataString(formData));
-        writer.flush();
-        writer.close();
-        outputStream.close();
+            OutputStream outputStream = connection.getOutputStream();
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+            writer.write(HTTPUtil.getPostDataString(formData));
+            writer.flush();
+            writer.close();
+            outputStream.close();
 
-        connection.getResponseCode();
+            connection.getResponseCode();
 
-        Scanner scanner = new Scanner(connection.getInputStream()).useDelimiter("\\A");
-        String dogshit = scanner.hasNext() ? scanner.next() : "";
-        operationListeners.endOperation();
-        return dogshit.equals("success");
+
+            Element utuElement = XMLUtil.parseXml(connection.getInputStream());
+            int userId = XMLUtil.getAndParseIntValueOfChild(utuElement, "user_id");
+            int sclassId = XMLUtil.getAndParseIntValueOfChild(utuElement, "sclass_id");
+            boolean admin = XMLUtil.getAndParseBooleanValueOfChild(utuElement, "admin");
+            currentUser = new User(userId, admin, sclassId);
+            return true;
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+            return false;
+        } catch (SAXException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            operationListeners.endOperation();
+        }
     }
 
     public void load(int sclassId) throws IOException, SAXException, NumberFormatException, CollectionUtil.RecordNotFoundException, CollectionUtil.MultipleRecordsWithSameIdException, DateFormatException, SclassDoesNotExistException {
@@ -96,13 +111,14 @@ public class DataLoader {
     }
 
     public void load(Sclass sclass) throws IOException, SAXException, NumberFormatException, CollectionUtil.RecordNotFoundException, CollectionUtil.MultipleRecordsWithSameIdException, DateFormatException {
-        lastSclassLoaded = null;
+        dataLoaded = false;
+        lastSclass = sclass;
         if (!predata.isLoaded()) {
             predata.load();
         }
         loadTimetablesData(sclass);
         loadUtuData(sclass);
-        lastSclassLoaded = sclass;
+        dataLoaded = true;
     }
 
     private void loadTimetablesData(Sclass sclass) throws IOException, SAXException {
@@ -170,9 +186,11 @@ public class DataLoader {
 
             Element utuElement = XMLUtil.parseXml(responseStream);
 
+            /*
+            // no longer used, this info is served by response on login
             Element currentUserElement = XMLUtil.getElement(utuElement, "current_user");
             loggedIn = XMLUtil.getAndParseBooleanValueOfChild(currentUserElement, "logged_in");
-            adminLoggedIn = XMLUtil.getAndParseBooleanValueOfChild(currentUserElement, "admin_logged_in");
+            adminLoggedIn = XMLUtil.getAndParseBooleanValueOfChild(currentUserElement, "admin_logged_in");*/
 
             // additional infos
             final NodeList additionalInfos = XMLUtil.getNodeList(utuElement, "additional_infos_global", "additional_info");
@@ -196,26 +214,7 @@ public class DataLoader {
                 @Override
                 public void accept(Element parameter) {
                     try {
-                        int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
-                        String title = XMLUtil.getValueOfChild(parameter, "title");
-                        String description = XMLUtil.getValueOfChild(parameter, "description");
-                        String location = XMLUtil.getValueOfChild(parameter, "location");
-                        int price = XMLUtil.getAndParseIntValueOfChild(parameter, "price");
-                        Date start = XMLUtil.getAndParseDateValueOfChild(parameter, "start");
-                        Date end = XMLUtil.getAndParseDateValueOfChild(parameter, "end");
-                        Date payDate = XMLUtil.getAndParseDateValueOfChild(parameter, "pay_date");
-                        final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
-                        Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
-                        final List<Integer> additionalInfoIds = new ArrayList<>();
-                        XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "additional_infos", "additional_info"), new Action<Element>() {
-                            @Override
-                            public void accept(Element parameter) {
-                                additionalInfoIds.add(XMLUtil.getAndParseIntValueOfChild(parameter, "id"));
-                            }
-                        });
-                        List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
-                        boolean done = XMLUtil.getAndParseBooleanValueOfChild(parameter, "done");
-                        eventsList.add(new Event(id, title, description, location, price, start, end, payDate, sgroup, additionalInfos, done));
+                        eventsList.add(parseXMLEvent(parameter));
                     } catch (ParseException e) {
                         throw new DateFormatException(e);
                     }
@@ -229,28 +228,7 @@ public class DataLoader {
                 @Override
                 public void accept(Element parameter) {
                     try {
-                        int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
-                        String title = XMLUtil.getValueOfChild(parameter, "title");
-                        String description = XMLUtil.getValueOfChild(parameter, "description");
-                        Date date = XMLUtil.getAndParseDateValueOfChild(parameter, "date");
-                        final int subjectId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "subject"), "id");
-                        Subject subject = CollectionUtil.findById(predata.subjectsList, subjectId);
-                        final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
-                        Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
-                        final List<Integer> additionalInfoIds = new ArrayList<>();
-                        XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "additional_infos", "additional_info"), new Action<Element>() {
-                            @Override
-                            public void accept(Element parameter) {
-                                additionalInfoIds.add(XMLUtil.getAndParseIntValueOfChild(parameter, "id"));
-                            }
-                        });
-
-                        List<Integer> lessonIds = ArrayUtil.parseIntArray(XMLUtil.getValueOfChild(parameter, "lesson_ids"));
-                        List<Lesson> lessons = CollectionUtil.findByIds(lessonsList, lessonIds);
-
-                        List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
-                        boolean done = XMLUtil.getAndParseBooleanValueOfChild(parameter, "done");
-                        examsList.add(new Exam(id, title, description, date, subject, sgroup, additionalInfos, done, lessons));
+                        examsList.add(parseXMLExam(parameter));
                     } catch (ParseException e) {
                         throw new DateFormatException(e);
                     }
@@ -264,29 +242,8 @@ public class DataLoader {
                 @Override
                 public void accept(Element parameter) {
                     try {
-                        int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
-                        String title = XMLUtil.getValueOfChild(parameter, "title");
-                        String description = XMLUtil.getValueOfChild(parameter, "description");
-                        Date date = XMLUtil.getAndParseDateValueOfChild(parameter, "date");
-                        final int subjectId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "subject"), "id");
-                        Subject subject = CollectionUtil.findById(predata.subjectsList, subjectId);
-                        final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
-                        Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
-                        final List<Integer> additionalInfoIds = new ArrayList<>();
-                        XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "additional_infos", "additional_info"), new Action<Element>() {
-                            @Override
-                            public void accept(Element parameter) {
-                                additionalInfoIds.add(XMLUtil.getAndParseIntValueOfChild(parameter, "id"));
-                            }
-                        });
-                        List<Integer> lessonIds = ArrayUtil.parseIntArray(XMLUtil.getValueOfChild(parameter, "lesson_ids"));
-                        List<Lesson> lessons = CollectionUtil.findByIds(lessonsList, lessonIds);
-
-                        List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
-                        boolean done = XMLUtil.getAndParseBooleanValueOfChild(parameter, "done");
-                        tasksList.add(new Task(id, title, description, date, subject, sgroup, additionalInfos, done, lessons));
+                        tasksList.add(parseXMLTask(parameter));
                     } catch (ParseException e) {
-                        operationListeners.endOperation();
                         throw new DateFormatException(e);
                     }
                 }
@@ -299,21 +256,7 @@ public class DataLoader {
                 @Override
                 public void accept(Element parameter) {
                     try {
-                        int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
-                        String title = XMLUtil.getValueOfChild(parameter, "title");
-                        String description = XMLUtil.getValueOfChild(parameter, "description");
-                        Date publishedOn = XMLUtil.getAndParseDateTimeValueOfChild(parameter, "published_on");
-                        final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
-                        Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
-                        final List<Integer> additionalInfoIds = new ArrayList<>();
-                        XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "additional_infos", "additional_info"), new Action<Element>() {
-                            @Override
-                            public void accept(Element parameter) {
-                                additionalInfoIds.add(XMLUtil.getAndParseIntValueOfChild(parameter, "id"));
-                            }
-                        });
-                        List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
-                        articlesList.add(new Article(id, title, description, publishedOn, sgroup, additionalInfos));
+                        articlesList.add(parseXMLArticle(parameter));
                     } catch (ParseException e) {
                         throw new DateFormatException(e);
                     }
@@ -324,6 +267,102 @@ public class DataLoader {
         } finally {
             operationListeners.endOperation();
         }
+    }
+
+    private Event parseXMLEvent(Element parameter) throws ParseException {
+        int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+        String title = XMLUtil.getValueOfChild(parameter, "title");
+        String description = XMLUtil.getValueOfChild(parameter, "description");
+        String location = XMLUtil.getValueOfChild(parameter, "location");
+        int price = XMLUtil.getAndParseIntValueOfChild(parameter, "price");
+        Date start = XMLUtil.getAndParseDateValueOfChild(parameter, "start");
+        Date end = XMLUtil.getAndParseDateValueOfChild(parameter, "end");
+        Date payDate = XMLUtil.getAndParseDateValueOfChild(parameter, "pay_date");
+        final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
+        Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
+        final List<Integer> additionalInfoIds = new ArrayList<>();
+        XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "additional_infos", "additional_info"), new Action<Element>() {
+            @Override
+            public void accept(Element parameter) {
+                additionalInfoIds.add(XMLUtil.getAndParseIntValueOfChild(parameter, "id"));
+            }
+        });
+        List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
+        boolean done = XMLUtil.getAndParseBooleanValueOfChild(parameter, "done");
+        return new Event(id, title, description, location, price, start, end, payDate, sgroup, additionalInfos, done);
+    }
+
+    private Exam parseXMLExam(Element parameter) throws ParseException {
+        int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+        String title = XMLUtil.getValueOfChild(parameter, "title");
+        String description = XMLUtil.getValueOfChild(parameter, "description");
+        Date date = XMLUtil.getAndParseDateValueOfChild(parameter, "date");
+        final int subjectId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "subject"), "id");
+        Subject subject = CollectionUtil.findById(predata.subjectsList, subjectId);
+        final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
+        Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
+        final List<Integer> additionalInfoIds = new ArrayList<>();
+        XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "additional_infos", "additional_info"), new Action<Element>() {
+            @Override
+            public void accept(Element parameter) {
+                additionalInfoIds.add(XMLUtil.getAndParseIntValueOfChild(parameter, "id"));
+            }
+        });
+
+        List<Integer> lessonIds = ArrayUtil.parseIntArray(XMLUtil.getValueOfChild(parameter, "lesson_ids"));
+        List<Lesson> lessons = CollectionUtil.findByIds(lessonsList, lessonIds);
+
+        List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
+        boolean done = XMLUtil.getAndParseBooleanValueOfChild(parameter, "done");
+        String type = XMLUtil.getValueOfChild(parameter, "type");
+        Exam.Type realType;
+        if (Objects.equals(type, "written_exam"))
+            realType = Exam.Type.written;
+        else
+            realType = Exam.Type.raking;
+        return new Exam(id, title, description, date, subject, sgroup, additionalInfos, done, lessons, realType);
+    }
+
+    private Task parseXMLTask(Element parameter) throws ParseException {
+        int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+        String title = XMLUtil.getValueOfChild(parameter, "title");
+        String description = XMLUtil.getValueOfChild(parameter, "description");
+        Date date = XMLUtil.getAndParseDateValueOfChild(parameter, "date");
+        final int subjectId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "subject"), "id");
+        Subject subject = CollectionUtil.findById(predata.subjectsList, subjectId);
+        final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
+        Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
+        final List<Integer> additionalInfoIds = new ArrayList<>();
+        XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "additional_infos", "additional_info"), new Action<Element>() {
+            @Override
+            public void accept(Element parameter) {
+                additionalInfoIds.add(XMLUtil.getAndParseIntValueOfChild(parameter, "id"));
+            }
+        });
+        List<Integer> lessonIds = ArrayUtil.parseIntArray(XMLUtil.getValueOfChild(parameter, "lesson_ids"));
+        List<Lesson> lessons = CollectionUtil.findByIds(lessonsList, lessonIds);
+
+        List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
+        boolean done = XMLUtil.getAndParseBooleanValueOfChild(parameter, "done");
+        return new Task(id, title, description, date, subject, sgroup, additionalInfos, done, lessons);
+    }
+
+    private Article parseXMLArticle(Element parameter) throws ParseException {
+        int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+        String title = XMLUtil.getValueOfChild(parameter, "title");
+        String description = XMLUtil.getValueOfChild(parameter, "description");
+        Date publishedOn = XMLUtil.getAndParseDateTimeValueOfChild(parameter, "published_on");
+        final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
+        Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
+        final List<Integer> additionalInfoIds = new ArrayList<>();
+        XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "additional_infos", "additional_info"), new Action<Element>() {
+            @Override
+            public void accept(Element parameter) {
+                additionalInfoIds.add(XMLUtil.getAndParseIntValueOfChild(parameter, "id"));
+            }
+        });
+        List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
+        return new Article(id, title, description, publishedOn, sgroup, additionalInfos);
     }
 
     public List<Teacher> getTeachers() {
@@ -401,13 +440,162 @@ public class DataLoader {
     }
 
     public boolean isLoaded() {
-        return lastSclassLoaded != null;
+        return dataLoaded;
+    }
+
+    public User getCurrentUser() {
+        return currentUser;
+    }
+
+    public CreateUpdate getEditor() {
+        return editor;
     }
 
     public static class PredataNotLoadedException extends RuntimeException {
         @Override
         public String getMessage() {
             return "This method cannot be called before predata is loaded";
+        }
+    }
+
+    public static class SclassUnknownException extends Exception {
+        @Override
+        public String getMessage() {
+            return "Sclass needs to be specified by calling load() before calling this method";
+        }
+    }
+
+    public class AdminRequiredException extends Throwable {
+        @Override
+        public String getMessage() {
+            return "This method can be used only when administrator is logged in.";
+        }
+    }
+
+    public class CreateUpdate {
+        public String[] requestCUEvent(Event event, String title, String description, String location, int price, Date start, Date end, Date payDate, Sgroup sgroup, List<AdditionalInfo> additionalInfos) throws AdminRequiredException, IOException, SclassUnknownException {
+            Event eventNew;
+            if (event == null) {
+                eventNew = new Event(-1, title, description, location, price, start, end, payDate, sgroup, additionalInfos, false);
+            } else {
+                eventNew = new Event(event.getId(), title, description, location, price, start, end, payDate, sgroup, additionalInfos, false);
+            }
+            return updateCU(eventNew, event);
+        }
+
+        public String[] requestCUExam(Exam exam, String title, String description, Date date, Subject subject, Sgroup sgroup, List<AdditionalInfo> additionalInfos, Exam.Type type) throws AdminRequiredException, IOException, SclassUnknownException {
+            Exam examNew;
+            if (exam == null) {
+                examNew = new Exam(-1, title, description, date, subject, sgroup, additionalInfos, false, new ArrayList<Lesson>(), type);
+            } else {
+                examNew = new Exam(exam.getId(), title, description, date, subject, sgroup, additionalInfos, false, new ArrayList<Lesson>(), type);
+            }
+            return updateCU(examNew, exam);
+        }
+
+        public String[] requestCUTask(Task task, String title, String description, Date date, Subject subject, Sgroup sgroup, List<AdditionalInfo> additionalInfos) throws AdminRequiredException, IOException, SclassUnknownException {
+            Task taskNew;
+            if (task == null) {
+                taskNew = new Task(-1, title, description, date, subject, sgroup, additionalInfos, false, new ArrayList<Lesson>());
+            } else {
+                taskNew = new Task(task.getId(), title, description, date, subject, sgroup, additionalInfos, false, new ArrayList<Lesson>());
+            }
+            return updateCU(taskNew, task);
+        }
+
+        public String[] requestCUArticle(Article article, String title, String description, Date publishedOn, Sgroup sgroup, List<AdditionalInfo> additionalInfos) throws AdminRequiredException, IOException, SclassUnknownException {
+            Article articleNew;
+            if (article == null) {
+                articleNew = new Article(-1, title, description, publishedOn, sgroup, additionalInfos);
+            } else {
+                articleNew = new Article(article.getId(), title, description, publishedOn, sgroup, additionalInfos);
+            }
+            return updateCU(articleNew, article);
+        }
+
+        private String[] updateCU(GenericUtuItem processedItem, GenericUtuItem replacedItem) throws IOException, AdminRequiredException, SclassUnknownException {
+            try {
+                // check for admin
+                if (getCurrentUser() == null || !getCurrentUser().isAdmin())
+                    throw new AdminRequiredException();
+                // check for sclass
+                if (lastSclass == null)
+                    throw new SclassUnknownException();
+
+                // TODO allow multiple actions at once
+                // operationListeners.startOperation(new LoggingInOperation());
+
+                boolean createMode = false;
+                if (processedItem.getId() == -1)
+                    createMode = true;
+
+                URL url = new URL(baseUrl + "/api/save");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setDoOutput(true);
+                connection.setDoInput(true);
+                connection.setRequestMethod("POST");
+
+                FormData data = processedItem.getFormData();
+                data.put("type", processedItem.getTypeString());
+                data.put("exists", processedItem.getId() != -1);
+                data.put("sclass_id", lastSclass.getId());
+
+                OutputStream outputStream = connection.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+                writer.write(HTTPUtil.getPostDataString(data));
+                writer.flush();
+                writer.close();
+                outputStream.close();
+
+                Element rootElement = XMLUtil.parseXml(connection.getInputStream());
+                if (rootElement.getElementsByTagName("id").getLength() > 0) {
+                    // server returned item - success
+                    // update local data
+                    try {
+                        if (createMode) {
+                            if (processedItem instanceof Event) {
+                                eventsList.add(parseXMLEvent(rootElement));
+                            } else if (processedItem instanceof Exam) {
+                                examsList.add(parseXMLExam(rootElement));
+                            } else if (processedItem instanceof Task) {
+                                tasksList.add(parseXMLTask(rootElement));
+                            } else if (processedItem instanceof Article) {
+                                articlesList.add(parseXMLArticle(rootElement));
+                            }
+                        } else {
+                            if (processedItem instanceof Event) {
+                                eventsList.remove(replacedItem);
+                                eventsList.add(parseXMLEvent(rootElement));
+                            } else if (processedItem instanceof Exam) {
+                                examsList.remove(replacedItem);
+                                examsList.add(parseXMLExam(rootElement));
+                            } else if (processedItem instanceof Task) {
+                                tasksList.remove(replacedItem);
+                                tasksList.add(parseXMLTask(rootElement));
+                            } else if (processedItem instanceof Article) {
+                                articlesList.remove(replacedItem);
+                                articlesList.add(parseXMLArticle(rootElement));
+                            }
+                        }
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                } else {
+                    final ArrayList<String> errors = new ArrayList<>();
+                    // server returned errors
+                    XMLUtil.forEachElement(rootElement.getElementsByTagName("error"), new Action<Element>() {
+                        @Override
+                        public void accept(Element parameter) {
+                            errors.add(parameter.getTextContent());
+                        }
+                    });
+                    return (String[]) errors.toArray();
+                }
+            } catch (ParserConfigurationException | SAXException e) {
+                e.printStackTrace();
+                return new String[]{"Out of date application, please update"};
+            }
         }
     }
 

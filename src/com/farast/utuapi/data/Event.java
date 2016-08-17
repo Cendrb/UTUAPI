@@ -1,13 +1,14 @@
 package com.farast.utuapi.data;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import com.farast.utuapi.util.DateUtil;
+import com.farast.utuapi.util.FormData;
+
+import java.util.*;
 
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Event implements Identifiable {
+public class Event extends GenericUtuItem implements Identifiable {
     private int id;
     private String title;
     private String description;
@@ -30,7 +31,7 @@ public class Event implements Identifiable {
         this.end = new Date(end.getTime());
         this.payDate = new Date(payDate.getTime());
         this.sgroup = sgroup;
-        this.additionalInfos = additionalInfos;
+        this.additionalInfos = new ArrayList<>(additionalInfos);
         this.done = done;
     }
 
@@ -76,5 +77,27 @@ public class Event implements Identifiable {
 
     public boolean isDone() {
         return done;
+    }
+
+    @Override
+    FormData getFormData() {
+       FormData formData = new FormData();
+        if (id != -1)
+            formData.put("id", id);
+        formData.put("title", title);
+        formData.put("description", description);
+        formData.put("location", location);
+        formData.put("price", price);
+        formData.put("event_start", start);
+        formData.put("event_end", end);
+        formData.put("pay_date", payDate);
+        formData.put("sgroup_id", sgroup.getId());
+        formData.put("additional_info_ids", additionalInfos);
+        return formData;
+    }
+
+    @Override
+    String getTypeString() {
+        return "event";
     }
 }
