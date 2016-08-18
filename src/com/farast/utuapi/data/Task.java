@@ -4,13 +4,12 @@ import com.farast.utuapi.util.FormData;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Task extends GenericUtuItem implements Identifiable, TEItem {
+public class Task extends Updatable implements Identifiable, TEItem, Titleable {
     private int id;
     private String title;
     private String description;

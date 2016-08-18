@@ -7,7 +7,7 @@ import java.util.List;
  * Created by cendr_000 on 28.07.2016.
  */
 public class OperationManager {
-    private Operation currentOperation = null;
+    private List<Operation> runningOperations = new ArrayList<>();
 
     private List<OperationListener> operationListeners = new ArrayList<>();
 
@@ -19,49 +19,59 @@ public class OperationManager {
         operationListeners.clear();
     }
 
-    public void setOperationListener(OperationListener listener)
-    {
+    public void setOperationListener(OperationListener listener) {
         operationListeners.clear();
         operationListeners.add(listener);
     }
 
     public void startOperation(Operation operation) {
-        if(currentOperation != null)
-            throw new InvalidOperationException(InvalidOperationException.OperationType.start);
-        currentOperation = operation;
+        if (runningOperations.contains(operation))
+            throw new OperationAlreadyRunning(operation);
+        runningOperations.add(operation);
         for (OperationListener listener : operationListeners)
-            listener.started(currentOperation);
+            listener.started(operation, this);
     }
 
-    public void endOperation() {
-        if(currentOperation == null)
-            throw new InvalidOperationException(InvalidOperationException.OperationType.end);
+    public void endOperation(Operation operation) {
+        if (!runningOperations.contains(operation))
+            throw new OperationNotRunningException(operation);
+        runningOperations.remove(operation);
         for (OperationListener listener : operationListeners)
-            listener.ended(currentOperation);
-        currentOperation = null;
+            listener.ended(operation, this);
     }
 
-    public Operation getCurrentOperation() {
-        return currentOperation;
+    public List<Operation> getRunningOperations() {
+        return new ArrayList<>(runningOperations);
     }
 
-    public static class InvalidOperationException extends RuntimeException
+    public boolean isRunning()
     {
-        private OperationType type;
+        return runningOperations.size() > 0;
+    }
 
-        private enum OperationType { start, end }
+    public static class OperationAlreadyRunning extends RuntimeException {
+        Operation mOperation;
 
-        private InvalidOperationException(OperationType type)
-        {
-            this.type = type;
+        public OperationAlreadyRunning(Operation operation) {
+            mOperation = operation;
         }
 
         @Override
         public String getMessage() {
-            if(type == OperationType.start)
-                return "New operation cannot be started before the old one ends";
-            else
-                return "No operation to end";
+            return "Instance of operation \"" + mOperation.getName() + "\" is already running";
+        }
+    }
+
+    public static class OperationNotRunningException extends RuntimeException {
+        Operation mOperation;
+
+        public OperationNotRunningException(Operation operation) {
+            mOperation = operation;
+        }
+
+        @Override
+        public String getMessage() {
+            return "Instance of operation \"" + mOperation.getName() + "\" is not running, so it cannot be stopped";
         }
     }
 }

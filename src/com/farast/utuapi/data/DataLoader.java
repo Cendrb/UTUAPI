@@ -28,6 +28,7 @@ public class DataLoader {
 
     private Predata predata;
     private CreateUpdate editor;
+    private Notifier notifier;
 
     private List<AdditionalInfo> additionalInfosList;
     private List<Event> eventsList;
@@ -36,6 +37,10 @@ public class DataLoader {
     private List<Article> articlesList;
     private List<Timetable> timetablesList;
     private List<Lesson> lessonsList;
+
+    private Comparator<TEItem> tesComparator;
+    private Comparator<Event> eventsComparator;
+    private Comparator<Article> articlesComparator;
 
     private User currentUser = null;
 
@@ -48,8 +53,29 @@ public class DataLoader {
         articlesList = new ArrayList<>();
         timetablesList = new ArrayList<>();
         lessonsList = new ArrayList<>();
+
+        tesComparator = new Comparator<TEItem>() {
+            @Override
+            public int compare(TEItem o1, TEItem o2) {
+                return o1.getDate().compareTo(o2.getDate());
+            }
+        };
+        eventsComparator = new Comparator<Event>() {
+            @Override
+            public int compare(Event o1, Event o2) {
+                return o1.getStart().compareTo(o2.getStart());
+            }
+        };
+        articlesComparator = new Comparator<Article>() {
+            @Override
+            public int compare(Article o1, Article o2) {
+                return o1.getPublishedOn().compareTo(o2.getPublishedOn());
+            }
+        };
+
         predata = new Predata();
         editor = new CreateUpdate();
+        notifier = new Notifier();
 
         // automatically save cookies
         CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
@@ -61,8 +87,9 @@ public class DataLoader {
     }
 
     public boolean login(String email, String password) throws IOException {
+        Operation operation = new LoggingInOperation();
         try {
-            operationListeners.startOperation(new LoggingInOperation());
+            operationListeners.startOperation(operation);
             URL url = new URL(baseUrl + "/login.xml");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
@@ -96,7 +123,7 @@ public class DataLoader {
             e.printStackTrace();
             return false;
         } finally {
-            operationListeners.endOperation();
+            operationListeners.endOperation(operation);
         }
     }
 
@@ -122,8 +149,9 @@ public class DataLoader {
     }
 
     private void loadTimetablesData(Sclass sclass) throws IOException, SAXException {
+        Operation operation = new TimetablesDataOperation();
         try {
-            operationListeners.startOperation(new TimetablesDataOperation());
+            operationListeners.startOperation(operation);
             InputStream responseStream = HTTPUtil.openStream(baseUrl + "/api/timetables?sclass_id=" + sclass.getId());
             Element utuElement = XMLUtil.parseXml(responseStream);
             // timetables
@@ -175,22 +203,17 @@ public class DataLoader {
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } finally {
-            operationListeners.endOperation();
+            operationListeners.endOperation(operation);
         }
     }
 
     private void loadUtuData(Sclass sclass) throws IOException, SAXException {
+        Operation operation = new UtuDataOperation();
         try {
-            operationListeners.startOperation(new UtuDataOperation());
+            operationListeners.startOperation(operation);
             InputStream responseStream = HTTPUtil.openStream(baseUrl + "/api/data?sclass_id=" + sclass.getId());
 
             Element utuElement = XMLUtil.parseXml(responseStream);
-
-            /*
-            // no longer used, this info is served by response on login
-            Element currentUserElement = XMLUtil.getElement(utuElement, "current_user");
-            loggedIn = XMLUtil.getAndParseBooleanValueOfChild(currentUserElement, "logged_in");
-            adminLoggedIn = XMLUtil.getAndParseBooleanValueOfChild(currentUserElement, "admin_logged_in");*/
 
             // additional infos
             final NodeList additionalInfos = XMLUtil.getNodeList(utuElement, "additional_infos_global", "additional_info");
@@ -220,6 +243,7 @@ public class DataLoader {
                     }
                 }
             });
+            notifier.notifyEvents();
 
             // exams
             final NodeList exams = XMLUtil.getNodeList(utuElement, "exams", "item");
@@ -234,6 +258,7 @@ public class DataLoader {
                     }
                 }
             });
+            notifier.notifyExams();
 
             // tasks
             final NodeList tasks = XMLUtil.getNodeList(utuElement, "tasks", "item");
@@ -248,6 +273,7 @@ public class DataLoader {
                     }
                 }
             });
+            notifier.notifyTasks();
 
             // articles
             final NodeList articles = XMLUtil.getNodeList(utuElement, "articles", "item");
@@ -262,10 +288,11 @@ public class DataLoader {
                     }
                 }
             });
+            notifier.notifyArticles();
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } finally {
-            operationListeners.endOperation();
+            operationListeners.endOperation(operation);
         }
     }
 
@@ -417,13 +444,7 @@ public class DataLoader {
         List<TEItem> teItems = new ArrayList<>();
         teItems.addAll(tasksList);
         teItems.addAll(examsList);
-        Comparator<TEItem> teItemComparator = new Comparator<TEItem>() {
-            @Override
-            public int compare(TEItem o1, TEItem o2) {
-                return o1.getDate().compareTo(o2.getDate());
-            }
-        };
-        Collections.sort(teItems, teItemComparator);
+        Collections.sort(teItems, tesComparator);
         return teItems;
     }
 
@@ -437,6 +458,10 @@ public class DataLoader {
 
     public boolean isPredataLoaded() {
         return predata.isLoaded();
+    }
+
+    public boolean isAdminLoggedIn() {
+        return (currentUser != null && currentUser.isAdmin());
     }
 
     public OperationManager getOperationManager() {
@@ -453,6 +478,14 @@ public class DataLoader {
 
     public CreateUpdate getEditor() {
         return editor;
+    }
+
+    public Notifier getNotifier() {
+        return notifier;
+    }
+
+    public interface OnDataSetListener {
+        void onDataSetChanged();
     }
 
     public static class PredataNotLoadedException extends RuntimeException {
@@ -517,17 +550,17 @@ public class DataLoader {
             return updateCU(articleNew, article);
         }
 
-        private String[] updateCU(GenericUtuItem processedItem, GenericUtuItem replacedItem) throws IOException, AdminRequiredException, SclassUnknownException {
+        private String[] updateCU(Updatable processedItem, Updatable replacedItem) throws IOException, AdminRequiredException, SclassUnknownException {
+            Operation operation = new CUOperation(processedItem.getClass().getSimpleName(), replacedItem);
             try {
+                operationListeners.startOperation(operation);
+
                 // check for admin
                 if (getCurrentUser() == null || !getCurrentUser().isAdmin())
                     throw new AdminRequiredException();
                 // check for sclass
                 if (lastSclass == null)
                     throw new SclassUnknownException();
-
-                // TODO allow multiple actions at once
-                // operationListeners.startOperation(new LoggingInOperation());
 
                 boolean createMode = false;
                 if (processedItem.getId() == -1)
@@ -559,26 +592,34 @@ public class DataLoader {
                         if (createMode) {
                             if (processedItem instanceof Event) {
                                 eventsList.add(parseXMLEvent(rootElement));
+                                notifier.notifyEvents();
                             } else if (processedItem instanceof Exam) {
                                 examsList.add(parseXMLExam(rootElement));
+                                notifier.notifyExams();
                             } else if (processedItem instanceof Task) {
                                 tasksList.add(parseXMLTask(rootElement));
+                                notifier.notifyTasks();
                             } else if (processedItem instanceof Article) {
                                 articlesList.add(parseXMLArticle(rootElement));
+                                notifier.notifyArticles();
                             }
                         } else {
                             if (processedItem instanceof Event) {
                                 eventsList.remove(replacedItem);
                                 eventsList.add(parseXMLEvent(rootElement));
+                                notifier.notifyEvents();
                             } else if (processedItem instanceof Exam) {
                                 examsList.remove(replacedItem);
                                 examsList.add(parseXMLExam(rootElement));
+                                notifier.notifyExams();
                             } else if (processedItem instanceof Task) {
                                 tasksList.remove(replacedItem);
                                 tasksList.add(parseXMLTask(rootElement));
+                                notifier.notifyTasks();
                             } else if (processedItem instanceof Article) {
                                 articlesList.remove(replacedItem);
                                 articlesList.add(parseXMLArticle(rootElement));
+                                notifier.notifyArticles();
                             }
                         }
                     } catch (ParseException e) {
@@ -586,20 +627,127 @@ public class DataLoader {
                     }
                     return null;
                 } else {
-                    final ArrayList<String> errors = new ArrayList<>();
-                    // server returned errors
-                    XMLUtil.forEachElement(rootElement.getElementsByTagName("error"), new Action<Element>() {
-                        @Override
-                        public void accept(Element parameter) {
-                            errors.add(parameter.getTextContent());
-                        }
-                    });
-                    return (String[]) errors.toArray();
+                    return parseErrorsFromXML(rootElement);
                 }
             } catch (ParserConfigurationException | SAXException e) {
                 e.printStackTrace();
-                return new String[]{"Out of date application, please update"};
+                return new String[]{"Either the application or the server is broken, please tell me"};
+            } finally {
+                operationListeners.endOperation(operation);
             }
+        }
+
+        public String[] requestDestroy(Updatable item) throws AdminRequiredException, IOException {
+            Operation operation = new DestroyOperation(item);
+            try {
+                operationListeners.startOperation(operation);
+                // check for admin
+                if (getCurrentUser() == null || !getCurrentUser().isAdmin())
+                    throw new AdminRequiredException();
+
+                URL url = new URL(baseUrl + "/api/destroy");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setDoOutput(true);
+                connection.setDoInput(true);
+                connection.setRequestMethod("POST");
+
+                FormData data = new FormData();
+                data.put("id", item.getId());
+                data.put("type", item.getTypeString());
+
+                OutputStream outputStream = connection.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+                writer.write(HTTPUtil.getPostDataString(data));
+                writer.flush();
+                writer.close();
+                outputStream.close();
+
+                Element rootElement = XMLUtil.parseXml(connection.getInputStream());
+                if (rootElement.getElementsByTagName("success").getLength() > 0) {
+                    // successfully deleted
+                    if (item instanceof Event) {
+                        eventsList.remove(item);
+                        notifier.notifyEvents();
+                    } else if (item instanceof Exam) {
+                        examsList.remove(item);
+                        notifier.notifyExams();
+                    } else if (item instanceof Task) {
+                        tasksList.remove(item);
+                        notifier.notifyTasks();
+                    } else if (item instanceof Article) {
+                        articlesList.remove(item);
+                        notifier.notifyArticles();
+                    }
+                    return null;
+                } else {
+                    return parseErrorsFromXML(rootElement);
+                }
+            } catch (ParserConfigurationException | SAXException e) {
+                e.printStackTrace();
+                return new String[]{"Either the application or the server is broken, please tell me"};
+            } finally {
+                operationListeners.endOperation(operation);
+            }
+        }
+
+        private String[] parseErrorsFromXML(Element errorsElement) {
+            final ArrayList<String> errors = new ArrayList<>();
+            // server returned errors
+            XMLUtil.forEachElement(errorsElement.getElementsByTagName("error"), new Action<Element>() {
+                @Override
+                public void accept(Element parameter) {
+                    errors.add(parameter.getTextContent());
+                }
+            });
+            return (String[]) errors.toArray();
+        }
+    }
+
+    public class Notifier {
+        OnDataSetListener eventsListener;
+        OnDataSetListener examsListener;
+        OnDataSetListener tasksListener;
+        OnDataSetListener articlesListener;
+
+        private void notifyEvents() {
+            tryNotify(eventsListener);
+            Collections.sort(eventsList, eventsComparator);
+        }
+
+        private void notifyExams() {
+            tryNotify(examsListener);
+            Collections.sort(examsList, tesComparator);
+        }
+
+        private void notifyTasks() {
+            tryNotify(tasksListener);
+            Collections.sort(tasksList, tesComparator);
+        }
+
+        private void notifyArticles() {
+            tryNotify(articlesListener);
+            Collections.sort(articlesList, articlesComparator);
+        }
+
+        private void tryNotify(OnDataSetListener listener) {
+            if (listener != null)
+                listener.onDataSetChanged();
+        }
+
+        public void setEventsListener(OnDataSetListener eventsListener) {
+            this.eventsListener = eventsListener;
+        }
+
+        public void setExamsListener(OnDataSetListener examsListener) {
+            this.examsListener = examsListener;
+        }
+
+        public void setTasksListener(OnDataSetListener tasksListener) {
+            this.tasksListener = tasksListener;
+        }
+
+        public void setArticlesListener(OnDataSetListener articlesListener) {
+            this.articlesListener = articlesListener;
         }
     }
 
@@ -622,8 +770,9 @@ public class DataLoader {
         }
 
         private void load() throws IOException, SAXException, NumberFormatException {
+            Operation operation = new PredataOperation();
             try {
-                operationListeners.startOperation(new PredataOperation());
+                operationListeners.startOperation(operation);
                 InputStream responseStream = HTTPUtil.openStream(baseUrl + "/api/pre_data");
                 Element utuElement = XMLUtil.parseXml(responseStream);
 
@@ -706,7 +855,7 @@ public class DataLoader {
             } catch (ParserConfigurationException e) {
                 e.printStackTrace();
             } finally {
-                operationListeners.endOperation();
+                operationListeners.endOperation(operation);
             }
         }
 

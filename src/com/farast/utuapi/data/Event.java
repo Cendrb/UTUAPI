@@ -1,6 +1,5 @@
 package com.farast.utuapi.data;
 
-import com.farast.utuapi.util.DateUtil;
 import com.farast.utuapi.util.FormData;
 
 import java.util.*;
@@ -8,7 +7,7 @@ import java.util.*;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Event extends GenericUtuItem implements Identifiable {
+public class Event extends Updatable implements Identifiable, Titleable {
     private int id;
     private String title;
     private String description;
