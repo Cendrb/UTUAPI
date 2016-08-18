@@ -3,7 +3,7 @@ package com.farast.utuapi.data;
 /**
  * Created by cendr_000 on 25.07.2016.
  */
-public class Subject implements Identifiable {
+public class Subject implements Identifiable, Selectable {
     private int id;
     private String name;
 

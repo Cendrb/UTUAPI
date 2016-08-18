@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Created by cendr_000 on 25.07.2016.
  */
-public class Sclass implements Identifiable {
+public class Sclass implements Identifiable, Selectable {
     private int id;
     private String name;
     private List<ClassMember> classMembers;

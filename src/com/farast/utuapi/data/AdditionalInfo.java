@@ -3,7 +3,7 @@ package com.farast.utuapi.data;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class AdditionalInfo implements Identifiable {
+public class AdditionalInfo implements Identifiable, Selectable {
     private int id;
     private String name;
     private String url;
