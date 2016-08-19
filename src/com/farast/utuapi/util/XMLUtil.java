@@ -60,6 +60,18 @@ public final class XMLUtil {
         return (Element) element.getElementsByTagName(elementName).item(0);
     }
 
+    public static boolean exists(Element element, String childElementName)
+    {
+        return element.getElementsByTagName(childElementName).getLength() > 0;
+    }
+
+    public static boolean existsAndNotEmpty(Element element, String childElementName)
+    {
+        NodeList kidi = element.getElementsByTagName(childElementName);
+        String text = kidi.item(0).getTextContent();
+        return kidi.getLength() > 0 && text != null && !text.isEmpty();
+    }
+
     public static Element parseXml(InputStream xmlStream) throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         Document document = builder.parse(xmlStream);

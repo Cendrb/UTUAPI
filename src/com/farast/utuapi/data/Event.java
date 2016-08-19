@@ -7,7 +7,7 @@ import java.util.*;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Event extends Updatable implements Identifiable, Titleable {
+public class Event extends Updatable implements Identifiable, Titleable, Infoable {
     private int id;
     private String title;
     private String description;

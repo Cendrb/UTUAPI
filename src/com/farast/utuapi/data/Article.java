@@ -9,20 +9,28 @@ import java.util.List;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Article extends Updatable implements Identifiable, Titleable {
+public class Article extends Updatable implements Identifiable, Titleable, Infoable {
     private int id;
     private String title;
     private String description;
     private Date publishedOn;
+    private Date showInDetailsUntil;
     private Sgroup sgroup;
     private List<AdditionalInfo> additionalInfos;
 
-    Article(int id, String title, String description, Date publishedOn, Sgroup sgroup, List<AdditionalInfo> additionalInfos) {
+    Article(int id, String title, String description, Date publishedOn, Date showInDetailsUntil, Sgroup sgroup, List<AdditionalInfo> additionalInfos) {
         this.id = id;
         this.title = title;
         this.description = description;
-        this.publishedOn = new Date(publishedOn.getTime());
+        if (publishedOn != null)
+            this.publishedOn = new Date(publishedOn.getTime());
+        else
+            publishedOn = null;
         this.sgroup = sgroup;
+        if (showInDetailsUntil != null)
+            this.showInDetailsUntil = new Date(showInDetailsUntil.getTime());
+        else
+            showInDetailsUntil = null;
         this.additionalInfos = new ArrayList<>(additionalInfos);
     }
 
@@ -40,7 +48,26 @@ public class Article extends Updatable implements Identifiable, Titleable {
     }
 
     public Date getPublishedOn() {
-        return new Date(publishedOn.getTime());
+        if (isPublished())
+            return new Date(publishedOn.getTime());
+        else
+            return null;
+    }
+
+    public Date getShowInDetailsUntil()
+    {
+        if (isShowInDetails())
+            return new Date(showInDetailsUntil.getTime());
+        else
+            return null;
+    }
+
+    public boolean isPublished() {
+        return publishedOn != null;
+    }
+
+    public boolean isShowInDetails() {
+        return showInDetailsUntil != null;
     }
 
     public Sgroup getSgroup() {
@@ -57,8 +84,17 @@ public class Article extends Updatable implements Identifiable, Titleable {
         if (id != -1)
             formData.put("id", id);
         formData.put("title", title);
-        formData.put("description", description);
-        formData.put("published_on", publishedOn);
+        formData.put("text", description);
+        if (publishedOn != null) {
+            formData.put("published_on", publishedOn);
+            formData.put("published", true);
+        } else
+            formData.put("published", false);
+        if (showInDetailsUntil != null) {
+            formData.put("show_in_details_until", showInDetailsUntil);
+            formData.put("show_in_details", true);
+        } else
+            formData.put("show_in_details", false);
         formData.put("sgroup_id", sgroup);
         formData.put("additional_info_ids", additionalInfos);
         return formData;

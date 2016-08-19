@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Exam extends Updatable implements Identifiable, TEItem, Titleable {
+public class Exam extends Updatable implements Identifiable, TEItem, Titleable, Infoable {
 
     private int id;
     private String title;

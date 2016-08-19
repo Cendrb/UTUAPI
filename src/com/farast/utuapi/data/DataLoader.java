@@ -69,6 +69,10 @@ public class DataLoader {
         articlesComparator = new Comparator<Article>() {
             @Override
             public int compare(Article o1, Article o2) {
+                if (!o1.isPublished())
+                    return -1;
+                if (!o2.isPublished())
+                    return 1;
                 return o1.getPublishedOn().compareTo(o2.getPublishedOn());
             }
         };
@@ -378,7 +382,16 @@ public class DataLoader {
         int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
         String title = XMLUtil.getValueOfChild(parameter, "title");
         String description = XMLUtil.getValueOfChild(parameter, "description");
-        Date publishedOn = XMLUtil.getAndParseDateTimeValueOfChild(parameter, "published_on");
+        Date publishedOn;
+        if (XMLUtil.existsAndNotEmpty(parameter, "published_on"))
+            publishedOn = XMLUtil.getAndParseDateTimeValueOfChild(parameter, "published_on");
+        else
+            publishedOn = null;
+        Date showInDetailsUntil;
+        if (XMLUtil.existsAndNotEmpty(parameter, "show_in_details_until"))
+            showInDetailsUntil = XMLUtil.getAndParseDateTimeValueOfChild(parameter, "show_in_details_until");
+        else
+            showInDetailsUntil = null;
         final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
         Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
         final List<Integer> additionalInfoIds = new ArrayList<>();
@@ -389,7 +402,7 @@ public class DataLoader {
             }
         });
         List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
-        return new Article(id, title, description, publishedOn, sgroup, additionalInfos);
+        return new Article(id, title, description, publishedOn, showInDetailsUntil, sgroup, additionalInfos);
     }
 
     public List<Teacher> getTeachers() {
@@ -453,7 +466,7 @@ public class DataLoader {
     }
 
     public List<Sgroup> getSgroupsList() {
-        return predata.sgroupsList;
+        return new ArrayList<>(predata.sgroupsList);
     }
 
     public boolean isPredataLoaded() {
@@ -540,12 +553,12 @@ public class DataLoader {
             return updateCU(taskNew, task);
         }
 
-        public String[] requestCUArticle(Article article, String title, String description, Date publishedOn, Sgroup sgroup, List<AdditionalInfo> additionalInfos) throws AdminRequiredException, IOException, SclassUnknownException {
+        public String[] requestCUArticle(Article article, String title, String description, Date publishedOn, Date showInDetailsUntil, Sgroup sgroup, List<AdditionalInfo> additionalInfos) throws AdminRequiredException, IOException, SclassUnknownException {
             Article articleNew;
             if (article == null) {
-                articleNew = new Article(-1, title, description, publishedOn, sgroup, additionalInfos);
+                articleNew = new Article(-1, title, description, publishedOn, showInDetailsUntil, sgroup, additionalInfos);
             } else {
-                articleNew = new Article(article.getId(), title, description, publishedOn, sgroup, additionalInfos);
+                articleNew = new Article(article.getId(), title, description, publishedOn, showInDetailsUntil, sgroup, additionalInfos);
             }
             return updateCU(articleNew, article);
         }

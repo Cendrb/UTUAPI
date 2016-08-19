@@ -34,6 +34,6 @@ public class AdditionalInfo implements Identifiable, Selectable {
 
     @Override
     public String toString() {
-        return subject.getName() + " " + getName();
+        return getName();
     }
 }
