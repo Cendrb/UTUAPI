@@ -7,7 +7,7 @@ import java.util.*;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Event extends Updatable implements Identifiable, Titleable, Infoable {
+public class Event implements Updatable, Identifiable, Titleable, Infoable {
     private int id;
     private String title;
     private String description;
@@ -79,7 +79,7 @@ public class Event extends Updatable implements Identifiable, Titleable, Infoabl
     }
 
     @Override
-    FormData getFormData() {
+    public FormData getFormData() {
        FormData formData = new FormData();
         if (id != -1)
             formData.put("id", id);
@@ -96,7 +96,7 @@ public class Event extends Updatable implements Identifiable, Titleable, Infoabl
     }
 
     @Override
-    String getTypeString() {
+    public String getTypeString() {
         return "event";
     }
 }

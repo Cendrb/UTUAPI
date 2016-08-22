@@ -7,7 +7,7 @@ import java.util.HashMap;
 /**
  * Created by cendr_000 on 17.08.2016.
  */
-public abstract class Updatable implements Identifiable, Titleable {
-    abstract FormData getFormData();
-    abstract String getTypeString();
+public interface Updatable extends Identifiable, Titleable {
+    FormData getFormData();
+    String getTypeString();
 }

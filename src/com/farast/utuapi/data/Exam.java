@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Exam extends Updatable implements Identifiable, TEItem, Titleable, Infoable {
+public class Exam implements Updatable, Identifiable, TEItem, Titleable, Infoable {
 
     private int id;
     private String title;
@@ -21,6 +21,7 @@ public class Exam extends Updatable implements Identifiable, TEItem, Titleable, 
     private boolean done;
     private List<Lesson> lessons;
     private Type type;
+
     Exam(int id, String title, String description, Date date, Subject subject, Sgroup sgroup, List<AdditionalInfo> additionalInfos, boolean done, List<Lesson> lessons, Type type) {
         this.id = id;
         this.title = title;
@@ -71,7 +72,7 @@ public class Exam extends Updatable implements Identifiable, TEItem, Titleable, 
     }
 
     @Override
-    FormData getFormData() {
+    public FormData getFormData() {
         FormData formData = new FormData();
         if (id != -1)
             formData.put("id", id);
@@ -89,9 +90,8 @@ public class Exam extends Updatable implements Identifiable, TEItem, Titleable, 
     }
 
     @Override
-    String getTypeString() {
-        switch (type)
-        {
+    public String getTypeString() {
+        switch (type) {
             case written:
                 return "written_exam";
             case raking:

@@ -86,6 +86,25 @@ public class DataLoader {
         CookieHandler.setDefault(cookieManager);
     }
 
+    public Object findUtuItem(int id, UtuType itemType)
+    {
+        switch (itemType)
+        {
+            case additional_info:
+                return CollectionUtil.findById(getAdditionalInfosList(), id);
+            case event:
+                return CollectionUtil.findById(getEventsList(), id);
+            case task:
+                return CollectionUtil.findById(getTasksList(), id);
+            case exam:
+                return CollectionUtil.findById(getExamsList(), id);
+            case article:
+                return CollectionUtil.findById(getArticlesList(), id);
+            default:
+                throw new UnsupportedOperationException("Unable to find this type of items");
+        }
+    }
+
     public void loadPredata() throws IOException, SAXException, NumberFormatException {
         predata.load();
     }
@@ -118,7 +137,10 @@ public class DataLoader {
             int userId = XMLUtil.getAndParseIntValueOfChild(utuElement, "user_id");
             int sclassId = XMLUtil.getAndParseIntValueOfChild(utuElement, "sclass_id");
             boolean admin = XMLUtil.getAndParseBooleanValueOfChild(utuElement, "admin");
-            currentUser = new User(userId, admin, sclassId);
+            String emailUser = XMLUtil.getValueOfChild(utuElement, "email");
+            int classMemberId = XMLUtil.getAndParseIntValueOfChild(utuElement, "class_member_id");
+            ClassMember classMember =  CollectionUtil.findById(predata.classMembersList, classMemberId);
+            currentUser = new User(userId, admin, sclassId, emailUser, classMember);
             return true;
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
@@ -485,6 +507,10 @@ public class DataLoader {
         return dataLoaded;
     }
 
+    public Sclass getLastSclass() {
+        return lastSclass;
+    }
+
     public User getCurrentUser() {
         return currentUser;
     }
@@ -772,6 +798,7 @@ public class DataLoader {
         private List<Subject> subjectsList;
         private List<Sgroup> sgroupsList;
         private List<Teacher> teachersList;
+        private List<ClassMember> classMembersList;
 
         private Predata() {
             sclassesList = new ArrayList<>();
@@ -779,6 +806,7 @@ public class DataLoader {
             subjectsList = new ArrayList<>();
             sgroupsList = new ArrayList<>();
             teachersList = new ArrayList<>();
+            classMembersList = new ArrayList<>();
             loaded = false;
         }
 
@@ -804,7 +832,9 @@ public class DataLoader {
                                 int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
                                 String firstName = XMLUtil.getValueOfChild(parameter, "first_name");
                                 String lastName = XMLUtil.getValueOfChild(parameter, "last_name");
-                                classMembers.add(new ClassMember(id, firstName, lastName));
+                                ClassMember classMember = new ClassMember(id, firstName, lastName);
+                                classMembers.add(classMember);
+                                classMembersList.add(classMember);
                             }
                         });
                         sclassesList.add(new Sclass(id, name, classMembers));

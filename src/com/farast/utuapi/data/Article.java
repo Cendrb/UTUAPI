@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Article extends Updatable implements Identifiable, Titleable, Infoable {
+public class Article implements Updatable, Identifiable, Titleable, Infoable {
     private int id;
     private String title;
     private String description;
@@ -79,7 +79,7 @@ public class Article extends Updatable implements Identifiable, Titleable, Infoa
     }
 
     @Override
-    FormData getFormData() {
+    public FormData getFormData() {
         FormData formData = new FormData();
         if (id != -1)
             formData.put("id", id);
@@ -101,7 +101,7 @@ public class Article extends Updatable implements Identifiable, Titleable, Infoa
     }
 
     @Override
-    String getTypeString() {
+    public String getTypeString() {
         return "article";
     }
 }

@@ -18,6 +18,11 @@ public class ClassMember implements Identifiable {
         return id;
     }
 
+    public String getFullName()
+    {
+        return firstName + " " + lastName;
+    }
+
     public String getFirstName() {
         return firstName;
     }

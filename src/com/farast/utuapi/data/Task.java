@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Task extends Updatable implements Identifiable, TEItem, Titleable, Infoable {
+public class Task implements Updatable, Identifiable, TEItem, Titleable, Infoable {
     private int id;
     private String title;
     private String description;
@@ -69,7 +69,7 @@ public class Task extends Updatable implements Identifiable, TEItem, Titleable, 
     }
 
     @Override
-    FormData getFormData() {
+    public FormData getFormData() {
         FormData formData = new FormData();
         if (id != -1)
             formData.put("id", id);
@@ -83,7 +83,7 @@ public class Task extends Updatable implements Identifiable, TEItem, Titleable, 
     }
 
     @Override
-    String getTypeString() {
+    public String getTypeString() {
         return "task";
     }
 }
