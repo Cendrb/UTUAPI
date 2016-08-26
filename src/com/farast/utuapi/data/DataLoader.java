@@ -860,6 +860,7 @@ public class DataLoader {
 
                 // sclasses
                 final NodeList sclasses = XMLUtil.getNodeList(utuElement, "sclasses", "sclass");
+                classMembersList.clear();
                 sclassesList.clear();
                 XMLUtil.forEachElement(sclasses, new Action<Element>() {
                     @Override
