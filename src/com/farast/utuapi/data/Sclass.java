@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Created by cendr_000 on 25.07.2016.
  */
-public class Sclass implements Identifiable, Selectable {
+public class Sclass implements Identifiable, OnelineRepresentable {
     private int id;
     private String name;
     private List<ClassMember> classMembers;
@@ -30,7 +30,7 @@ public class Sclass implements Identifiable, Selectable {
     }
 
     @Override
-    public String toString() {
+    public String getOnelineRepresentation() {
         return name;
     }
 }

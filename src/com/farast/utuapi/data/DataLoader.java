@@ -37,6 +37,9 @@ public class DataLoader {
     private List<Article> articlesList;
     private List<Timetable> timetablesList;
     private List<Lesson> lessonsList;
+    private List<PlannedRakingList> plannedRakingsListsList;
+    private List<PlannedRakingRound> plannedRakingRoundsList;
+    private List<PlannedRakingEntry> plannedRakingEntriesList;
 
     private Comparator<TEItem> tesComparator;
     private Comparator<Event> eventsComparator;
@@ -53,6 +56,10 @@ public class DataLoader {
         articlesList = new ArrayList<>();
         timetablesList = new ArrayList<>();
         lessonsList = new ArrayList<>();
+        plannedRakingsListsList = new ArrayList<>();
+        plannedRakingRoundsList = new ArrayList<>();
+        plannedRakingEntriesList = new ArrayList<>();
+
 
         tesComparator = new Comparator<TEItem>() {
             @Override
@@ -86,20 +93,20 @@ public class DataLoader {
         CookieHandler.setDefault(cookieManager);
     }
 
-    public Object findUtuItem(int id, UtuType itemType)
-    {
-        switch (itemType)
-        {
+    public Object findUtuItem(int id, UtuType itemType) {
+        switch (itemType) {
             case additional_info:
-                return CollectionUtil.findById(getAdditionalInfosList(), id);
+                return CollectionUtil.findById(additionalInfosList, id);
             case event:
-                return CollectionUtil.findById(getEventsList(), id);
+                return CollectionUtil.findById(eventsList, id);
             case task:
-                return CollectionUtil.findById(getTasksList(), id);
+                return CollectionUtil.findById(tasksList, id);
             case exam:
-                return CollectionUtil.findById(getExamsList(), id);
+                return CollectionUtil.findById(examsList, id);
             case article:
-                return CollectionUtil.findById(getArticlesList(), id);
+                return CollectionUtil.findById(articlesList, id);
+            case subject:
+                return CollectionUtil.findById(predata.subjectsList, id);
             default:
                 throw new UnsupportedOperationException("Unable to find this type of items");
         }
@@ -110,6 +117,9 @@ public class DataLoader {
     }
 
     public boolean login(String email, String password) throws IOException {
+        if (!predata.isLoaded()) {
+            throw new PredataNotLoadedException();
+        }
         Operation operation = new LoggingInOperation();
         try {
             operationListeners.startOperation(operation);
@@ -139,7 +149,7 @@ public class DataLoader {
             boolean admin = XMLUtil.getAndParseBooleanValueOfChild(utuElement, "admin");
             String emailUser = XMLUtil.getValueOfChild(utuElement, "email");
             int classMemberId = XMLUtil.getAndParseIntValueOfChild(utuElement, "class_member_id");
-            ClassMember classMember =  CollectionUtil.findById(predata.classMembersList, classMemberId);
+            ClassMember classMember = CollectionUtil.findById(predata.classMembersList, classMemberId);
             currentUser = new User(userId, admin, sclassId, emailUser, classMember);
             return true;
         } catch (ParserConfigurationException e) {
@@ -167,7 +177,7 @@ public class DataLoader {
         dataLoaded = false;
         lastSclass = sclass;
         if (!predata.isLoaded()) {
-            predata.load();
+            throw new PredataNotLoadedException();
         }
         loadTimetablesData(sclass);
         loadUtuData(sclass);
@@ -315,6 +325,53 @@ public class DataLoader {
                 }
             });
             notifier.notifyArticles();
+
+            // planned raking lists
+            final NodeList plannedRakingLists = XMLUtil.getNodeList(utuElement, "planned_raking_lists", "planned_raking_list");
+            plannedRakingsListsList.clear();
+            plannedRakingRoundsList.clear();
+            plannedRakingEntriesList.clear();
+            XMLUtil.forEachElement(plannedRakingLists, new Action<Element>() {
+                @Override
+                public void accept(Element parameter) {
+                    int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+                    String title = XMLUtil.getValueOfChild(parameter, "title");
+                    Subject subject = CollectionUtil.findById(predata.subjectsList, XMLUtil.getAndParseIntValueOfChild(parameter, "subject_id"));
+                    Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, XMLUtil.getAndParseIntValueOfChild(parameter, "sgroup_id"));
+                    int rektPerRound = XMLUtil.getAndParseIntValueOfChild(parameter, "rekt_per_round");
+                    List<AdditionalInfo> additionalInfos = parseXMLAdditionalInfos(parameter);
+
+                    final List<PlannedRakingRound> plannedRakingRounds = new ArrayList<PlannedRakingRound>();
+                    XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "planned_raking_rounds", "planned_raking_round"), new Action<Element>() {
+                        @Override
+                        public void accept(Element parameter) {
+                            int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+                            int roundNumber = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+
+                            final List<PlannedRakingEntry> plannedRakingEntries = new ArrayList<>();
+                            XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "planned_raking_entries", "planned_raking_entry"), new Action<Element>() {
+                                @Override
+                                public void accept(Element parameter) {
+                                    int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+                                    String description = XMLUtil.getValueOfChild(parameter, "description");
+                                    boolean finished = XMLUtil.getAndParseBooleanValueOfChild(parameter, "finished");
+                                    int grade = XMLUtil.getAndParseIntValueOfChild(parameter, "grade");
+                                    int sortingOrder = XMLUtil.getAndParseIntValueOfChild(parameter, "sorting_order");
+                                    ClassMember classMember = CollectionUtil.findById(predata.classMembersList, XMLUtil.getAndParseIntValueOfChild(parameter, "class_member_id"));
+                                    PlannedRakingEntry plannedRakingEntry=new PlannedRakingEntry(id, description, finished, grade, sortingOrder, classMember);
+                                    plannedRakingEntriesList.add(plannedRakingEntry);
+                                    plannedRakingEntries.add(plannedRakingEntry);
+                                }
+                            });
+                            PlannedRakingRound plannedRakingRound = new PlannedRakingRound(id, roundNumber, plannedRakingEntries);
+                            plannedRakingRoundsList.add(plannedRakingRound);
+                            plannedRakingRounds.add(plannedRakingRound);
+                        }
+                    });
+                    plannedRakingsListsList.add(new PlannedRakingList(id, title, subject, sgroup, rektPerRound, additionalInfos, plannedRakingRounds));
+                }
+            });
+
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } finally {
@@ -333,14 +390,7 @@ public class DataLoader {
         Date payDate = XMLUtil.getAndParseDateValueOfChild(parameter, "pay_date");
         final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
         Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
-        final List<Integer> additionalInfoIds = new ArrayList<>();
-        XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "additional_infos", "additional_info"), new Action<Element>() {
-            @Override
-            public void accept(Element parameter) {
-                additionalInfoIds.add(XMLUtil.getAndParseIntValueOfChild(parameter, "id"));
-            }
-        });
-        List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
+        List<AdditionalInfo> additionalInfos = parseXMLAdditionalInfos(parameter);
         boolean done = XMLUtil.getAndParseBooleanValueOfChild(parameter, "done");
         return new Event(id, title, description, location, price, start, end, payDate, sgroup, additionalInfos, done);
     }
@@ -354,18 +404,11 @@ public class DataLoader {
         Subject subject = CollectionUtil.findById(predata.subjectsList, subjectId);
         final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
         Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
-        final List<Integer> additionalInfoIds = new ArrayList<>();
-        XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "additional_infos", "additional_info"), new Action<Element>() {
-            @Override
-            public void accept(Element parameter) {
-                additionalInfoIds.add(XMLUtil.getAndParseIntValueOfChild(parameter, "id"));
-            }
-        });
 
         List<Integer> lessonIds = ArrayUtil.parseIntArray(XMLUtil.getValueOfChild(parameter, "lesson_ids"));
         List<Lesson> lessons = CollectionUtil.findByIds(lessonsList, lessonIds);
 
-        List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
+        List<AdditionalInfo> additionalInfos = parseXMLAdditionalInfos(parameter);
         boolean done = XMLUtil.getAndParseBooleanValueOfChild(parameter, "done");
         String type = XMLUtil.getValueOfChild(parameter, "type");
         Exam.Type realType;
@@ -385,17 +428,11 @@ public class DataLoader {
         Subject subject = CollectionUtil.findById(predata.subjectsList, subjectId);
         final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
         Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
-        final List<Integer> additionalInfoIds = new ArrayList<>();
-        XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "additional_infos", "additional_info"), new Action<Element>() {
-            @Override
-            public void accept(Element parameter) {
-                additionalInfoIds.add(XMLUtil.getAndParseIntValueOfChild(parameter, "id"));
-            }
-        });
+
         List<Integer> lessonIds = ArrayUtil.parseIntArray(XMLUtil.getValueOfChild(parameter, "lesson_ids"));
         List<Lesson> lessons = CollectionUtil.findByIds(lessonsList, lessonIds);
 
-        List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
+        List<AdditionalInfo> additionalInfos = parseXMLAdditionalInfos(parameter);
         boolean done = XMLUtil.getAndParseBooleanValueOfChild(parameter, "done");
         return new Task(id, title, description, date, subject, sgroup, additionalInfos, done, lessons);
     }
@@ -416,15 +453,19 @@ public class DataLoader {
             showInDetailsUntil = null;
         final int sgroupId = XMLUtil.getAndParseIntValueOfChild(XMLUtil.getElement(parameter, "sgroup"), "id");
         Sgroup sgroup = CollectionUtil.findById(predata.sgroupsList, sgroupId);
+        List<AdditionalInfo> additionalInfos = parseXMLAdditionalInfos(parameter);
+        return new Article(id, title, description, publishedOn, showInDetailsUntil, sgroup, additionalInfos);
+    }
+
+    private List<AdditionalInfo> parseXMLAdditionalInfos(Element parentItemRoot) {
         final List<Integer> additionalInfoIds = new ArrayList<>();
-        XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "additional_infos", "additional_info"), new Action<Element>() {
+        XMLUtil.forEachElement(XMLUtil.getNodeList(parentItemRoot, "additional_infos", "additional_info"), new Action<Element>() {
             @Override
             public void accept(Element parameter) {
                 additionalInfoIds.add(XMLUtil.getAndParseIntValueOfChild(parameter, "id"));
             }
         });
-        List<AdditionalInfo> additionalInfos = CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
-        return new Article(id, title, description, publishedOn, showInDetailsUntil, sgroup, additionalInfos);
+        return CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
     }
 
     public List<Teacher> getTeachers() {

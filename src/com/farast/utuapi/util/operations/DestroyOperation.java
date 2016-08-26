@@ -15,6 +15,6 @@ public class DestroyOperation implements Operation {
 
     @Override
     public String getName() {
-        return "removing " + mItem.getTitle();
+        return "removing " + mItem.getOnelineRepresentation();
     }
 }

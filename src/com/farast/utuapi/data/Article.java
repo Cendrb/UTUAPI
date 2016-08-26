@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Article implements Updatable, Identifiable, Titleable, Infoable {
+public class Article implements Updatable, Identifiable, Infoable {
     private int id;
     private String title;
     private String description;
@@ -103,5 +103,10 @@ public class Article implements Updatable, Identifiable, Titleable, Infoable {
     @Override
     public String getTypeString() {
         return "article";
+    }
+
+    @Override
+    public String getOnelineRepresentation() {
+        return title;
     }
 }

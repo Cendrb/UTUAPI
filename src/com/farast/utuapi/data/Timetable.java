@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Created by cendr_000 on 28.07.2016.
  */
-public class Timetable implements Identifiable {
+public class Timetable implements Identifiable, OnelineRepresentable {
     private int id;
     private String name;
     private List<Sgroup> validSgroups;
@@ -34,5 +34,10 @@ public class Timetable implements Identifiable {
 
     public List<SchoolDay> getSchoolDays() {
         return new ArrayList<>(schoolDays);
+    }
+
+    @Override
+    public String getOnelineRepresentation() {
+        return name;
     }
 }

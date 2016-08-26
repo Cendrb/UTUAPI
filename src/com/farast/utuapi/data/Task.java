@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Task implements Updatable, Identifiable, TEItem, Titleable, Infoable {
+public class Task implements Updatable, Identifiable, TEItem, Infoable {
     private int id;
     private String title;
     private String description;
@@ -85,5 +85,10 @@ public class Task implements Updatable, Identifiable, TEItem, Titleable, Infoabl
     @Override
     public String getTypeString() {
         return "task";
+    }
+
+    @Override
+    public String getOnelineRepresentation() {
+        return title;
     }
 }

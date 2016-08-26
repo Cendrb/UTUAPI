@@ -3,7 +3,7 @@ package com.farast.utuapi.data;
 /**
  * Created by cendr_000 on 25.07.2016.
  */
-public class Sgroup implements Identifiable, Selectable {
+public class Sgroup implements Identifiable, OnelineRepresentable {
     private int id;
     private String name;
 
@@ -21,7 +21,7 @@ public class Sgroup implements Identifiable, Selectable {
     }
 
     @Override
-    public String toString() {
+    public String getOnelineRepresentation() {
         return name;
     }
 }

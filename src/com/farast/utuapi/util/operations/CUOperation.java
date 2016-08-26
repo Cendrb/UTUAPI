@@ -1,6 +1,6 @@
 package com.farast.utuapi.util.operations;
 
-import com.farast.utuapi.data.Titleable;
+import com.farast.utuapi.data.OnelineRepresentable;
 import com.farast.utuapi.data.Updatable;
 
 /**
@@ -8,10 +8,10 @@ import com.farast.utuapi.data.Updatable;
  */
 public class CUOperation implements Operation {
 
-    Titleable item;
+    Updatable item;
     String itemName;
 
-    public CUOperation(String itemName, Titleable item)
+    public CUOperation(String itemName, Updatable item)
     {
         this.itemName = itemName;
         this.item = item;
@@ -27,7 +27,7 @@ public class CUOperation implements Operation {
         builder.append(" ");
         builder.append(itemName);
         if(item != null)
-            builder.append(" (").append(item.getTitle()).append(")");
+            builder.append(" (").append(item.getOnelineRepresentation()).append(")");
         return builder.toString();
     }
 }

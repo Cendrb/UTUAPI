@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Created by cendr_000 on 25.07.2016.
@@ -43,8 +44,11 @@ public final class XMLUtil {
     }
 
     public static int getAndParseIntValueOfChild(Element element, String elementName) throws NumberFormatException {
-
-        return Integer.parseInt(getValueOfChild(element, elementName));
+        String childValue = getValueOfChild(element, elementName);
+        if (!Objects.equals(childValue, ""))
+            return Integer.parseInt(childValue);
+        else
+            return -1;
     }
 
     public static Date getAndParseDateValueOfChild(Element element, String elementName) throws ParseException {
@@ -60,13 +64,11 @@ public final class XMLUtil {
         return (Element) element.getElementsByTagName(elementName).item(0);
     }
 
-    public static boolean exists(Element element, String childElementName)
-    {
+    public static boolean exists(Element element, String childElementName) {
         return element.getElementsByTagName(childElementName).getLength() > 0;
     }
 
-    public static boolean existsAndNotEmpty(Element element, String childElementName)
-    {
+    public static boolean existsAndNotEmpty(Element element, String childElementName) {
         NodeList kidi = element.getElementsByTagName(childElementName);
         String text = kidi.item(0).getTextContent();
         return kidi.getLength() > 0 && text != null && !text.isEmpty();

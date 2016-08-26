@@ -7,7 +7,7 @@ import java.util.*;
 /**
  * Created by cendr_000 on 26.07.2016.
  */
-public class Event implements Updatable, Identifiable, Titleable, Infoable {
+public class Event implements Updatable, Identifiable, Infoable {
     private int id;
     private String title;
     private String description;
@@ -98,5 +98,10 @@ public class Event implements Updatable, Identifiable, Titleable, Infoable {
     @Override
     public String getTypeString() {
         return "event";
+    }
+
+    @Override
+    public String getOnelineRepresentation() {
+        return title;
     }
 }
