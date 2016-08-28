@@ -809,13 +809,11 @@ public class DataLoader {
         OnDataSetListener rakingsListener;
         OnDataSetListener timetablesListener;
 
-        private void notifyRakings()
-        {
+        private void notifyRakings() {
             tryNotify(rakingsListener);
         }
 
-        private void notifyTimetables()
-        {
+        private void notifyTimetables() {
             tryNotify(timetablesListener);
         }
 
@@ -858,6 +856,14 @@ public class DataLoader {
 
         public void setArticlesListener(OnDataSetListener articlesListener) {
             this.articlesListener = articlesListener;
+        }
+
+        public void setRakingsListener(OnDataSetListener rakingsListener) {
+            this.rakingsListener = rakingsListener;
+        }
+
+        public void setTimetablesListener(OnDataSetListener timetablesListener) {
+            this.timetablesListener = timetablesListener;
         }
     }
 
