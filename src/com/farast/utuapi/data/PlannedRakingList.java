@@ -1,12 +1,15 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.util.CollectionUtil;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * Created by cendr_000 on 26.08.2016.
  */
-public class PlannedRakingList implements Identifiable, Infoable, OnelineRepresentable  {
+public class PlannedRakingList implements Identifiable, Infoable, OnelineRepresentable {
 
     private int id;
     private String title;
@@ -24,6 +27,7 @@ public class PlannedRakingList implements Identifiable, Infoable, OnelineReprese
         this.rektPerRound = rektPerRound;
         this.additionalInfos = new ArrayList<>(additionalInfos);
         this.plannedRakingRounds = new ArrayList<>(plannedRakingRounds);
+        Collections.sort(plannedRakingRounds, PlannedRakingRound.COMPARATOR);
     }
 
     @Override
@@ -58,5 +62,9 @@ public class PlannedRakingList implements Identifiable, Infoable, OnelineReprese
     @Override
     public String getOnelineRepresentation() {
         return title;
+    }
+
+    public PlannedRakingRound getCurrentRound() {
+        return plannedRakingRounds.get(0);
     }
 }

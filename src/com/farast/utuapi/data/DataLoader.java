@@ -236,6 +236,7 @@ public class DataLoader {
                     timetablesList.add(new Timetable(id, name, sgroups, schoolDays));
                 }
             });
+            notifier.notifyTimetables();
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } finally {
@@ -346,7 +347,7 @@ public class DataLoader {
                         @Override
                         public void accept(Element parameter) {
                             int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
-                            int roundNumber = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+                            int roundNumber = XMLUtil.getAndParseIntValueOfChild(parameter, "number");
 
                             final List<PlannedRakingEntry> plannedRakingEntries = new ArrayList<>();
                             XMLUtil.forEachElement(XMLUtil.getNodeList(parameter, "planned_raking_entries", "planned_raking_entry"), new Action<Element>() {
@@ -358,7 +359,7 @@ public class DataLoader {
                                     int grade = XMLUtil.getAndParseIntValueOfChild(parameter, "grade");
                                     int sortingOrder = XMLUtil.getAndParseIntValueOfChild(parameter, "sorting_order");
                                     ClassMember classMember = CollectionUtil.findById(predata.classMembersList, XMLUtil.getAndParseIntValueOfChild(parameter, "class_member_id"));
-                                    PlannedRakingEntry plannedRakingEntry=new PlannedRakingEntry(id, description, finished, grade, sortingOrder, classMember);
+                                    PlannedRakingEntry plannedRakingEntry = new PlannedRakingEntry(id, description, finished, grade, sortingOrder, classMember);
                                     plannedRakingEntriesList.add(plannedRakingEntry);
                                     plannedRakingEntries.add(plannedRakingEntry);
                                 }
@@ -371,6 +372,7 @@ public class DataLoader {
                     plannedRakingsListsList.add(new PlannedRakingList(id, title, subject, sgroup, rektPerRound, additionalInfos, plannedRakingRounds));
                 }
             });
+            notifier.notifyRakings();
 
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
@@ -530,6 +532,22 @@ public class DataLoader {
 
     public List<Sgroup> getSgroupsList() {
         return new ArrayList<>(predata.sgroupsList);
+    }
+
+    public List<PlannedRakingList> getPlannedRakingsListsList() {
+        return new ArrayList<>(plannedRakingsListsList);
+    }
+
+    public List<PlannedRakingRound> getPlannedRakingRoundsList() {
+        return new ArrayList<>(plannedRakingRoundsList);
+    }
+
+    public List<PlannedRakingEntry> getPlannedRakingEntriesList() {
+        return new ArrayList<>(plannedRakingEntriesList);
+    }
+
+    public Sgroup getAllSgroup() {
+        return predata.allSgroup;
     }
 
     public boolean isPredataLoaded() {
@@ -788,6 +806,18 @@ public class DataLoader {
         OnDataSetListener examsListener;
         OnDataSetListener tasksListener;
         OnDataSetListener articlesListener;
+        OnDataSetListener rakingsListener;
+        OnDataSetListener timetablesListener;
+
+        private void notifyRakings()
+        {
+            tryNotify(rakingsListener);
+        }
+
+        private void notifyTimetables()
+        {
+            tryNotify(timetablesListener);
+        }
 
         private void notifyEvents() {
             tryNotify(eventsListener);
@@ -833,6 +863,7 @@ public class DataLoader {
 
     private class Predata {
 
+        private Sgroup allSgroup;
         private boolean loaded;
         private List<Sclass> sclassesList;
         private List<GroupCategory> groupCategoriesList;
@@ -857,31 +888,6 @@ public class DataLoader {
                 operationListeners.startOperation(operation);
                 InputStream responseStream = HTTPUtil.openStream(baseUrl + "/api/pre_data");
                 Element utuElement = XMLUtil.parseXml(responseStream);
-
-                // sclasses
-                final NodeList sclasses = XMLUtil.getNodeList(utuElement, "sclasses", "sclass");
-                classMembersList.clear();
-                sclassesList.clear();
-                XMLUtil.forEachElement(sclasses, new Action<Element>() {
-                    @Override
-                    public void accept(Element parameter) {
-                        int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
-                        String name = XMLUtil.getValueOfChild(parameter, "name");
-                        final List<ClassMember> classMembers = new ArrayList<>();
-                        XMLUtil.forEachElement(XMLUtil.getElement(parameter, "class_members").getElementsByTagName("class_member"), new Action<Element>() {
-                            @Override
-                            public void accept(Element parameter) {
-                                int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
-                                String firstName = XMLUtil.getValueOfChild(parameter, "first_name");
-                                String lastName = XMLUtil.getValueOfChild(parameter, "last_name");
-                                ClassMember classMember = new ClassMember(id, firstName, lastName);
-                                classMembers.add(classMember);
-                                classMembersList.add(classMember);
-                            }
-                        });
-                        sclassesList.add(new Sclass(id, name, classMembers));
-                    }
-                });
 
                 // group categories
                 final NodeList groupCategories = XMLUtil.getNodeList(utuElement, "group_categories", "group_category");
@@ -908,7 +914,34 @@ public class DataLoader {
                 });
 
                 // add the "all" group
-                sgroupsList.add(new Sgroup(-1, "zobrazit pro všechny"));
+                allSgroup = new Sgroup(-1, "zobrazit pro všechny");
+                sgroupsList.add(allSgroup);
+
+                // sclasses
+                final NodeList sclasses = XMLUtil.getNodeList(utuElement, "sclasses", "sclass");
+                classMembersList.clear();
+                sclassesList.clear();
+                XMLUtil.forEachElement(sclasses, new Action<Element>() {
+                    @Override
+                    public void accept(Element parameter) {
+                        int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+                        String name = XMLUtil.getValueOfChild(parameter, "name");
+                        final List<ClassMember> classMembers = new ArrayList<>();
+                        XMLUtil.forEachElement(XMLUtil.getElement(parameter, "class_members").getElementsByTagName("class_member"), new Action<Element>() {
+                            @Override
+                            public void accept(Element parameter) {
+                                int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+                                String firstName = XMLUtil.getValueOfChild(parameter, "first_name");
+                                String lastName = XMLUtil.getValueOfChild(parameter, "last_name");
+                                List<Sgroup> sgroups = CollectionUtil.findByIds(sgroupsList, ArrayUtil.parseIntArray(XMLUtil.getValueOfChild(parameter, "sgroup_ids")));
+                                ClassMember classMember = new ClassMember(id, firstName, lastName, sgroups);
+                                classMembers.add(classMember);
+                                classMembersList.add(classMember);
+                            }
+                        });
+                        sclassesList.add(new Sclass(id, name, classMembers));
+                    }
+                });
 
                 // subjects
                 final NodeList subjects = XMLUtil.getNodeList(utuElement, "subjects", "subject");
