@@ -40,4 +40,9 @@ public class Timetable implements Identifiable, OnelineRepresentable {
     public String getOnelineRepresentation() {
         return name;
     }
+
+    @Override
+    public String toString() {
+        return getOnelineRepresentation();
+    }
 }

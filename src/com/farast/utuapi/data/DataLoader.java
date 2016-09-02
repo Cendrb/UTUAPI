@@ -220,8 +220,20 @@ public class DataLoader {
                                         boolean notNormal = XMLUtil.getAndParseBooleanValueOfChild(parameter, "not_normal");
                                         String notNormalComment = XMLUtil.getValueOfChild(parameter, "not_normal_comment");
                                         String eventName = XMLUtil.getValueOfChild(parameter, "event_name");
-                                        Subject subject = CollectionUtil.findById(predata.subjectsList, XMLUtil.getAndParseIntValueOfChild(parameter, "subject_id"));
-                                        Teacher teacher = CollectionUtil.findById(predata.teachersList, XMLUtil.getAndParseIntValueOfChild(parameter, "teacher_id"));
+
+                                        Subject subject;
+                                        int subjectId = XMLUtil.getAndParseIntValueOfChild(parameter, "subject_id");
+                                        if(subjectId == -1)
+                                            subject = null;
+                                        else
+                                            subject = CollectionUtil.findById(predata.subjectsList, subjectId);
+
+                                        Teacher teacher;
+                                        int teacherId = XMLUtil.getAndParseIntValueOfChild(parameter, "teacher_id");
+                                        if(teacherId == -1)
+                                            teacher = null;
+                                        else
+                                            teacher = CollectionUtil.findById(predata.teachersList, teacherId);
                                         Lesson lesson = new Lesson(id, serialNumber, room, notNormal, notNormalComment, eventName, subject, teacher);
                                         lessons.add(lesson);
                                         lessonsList.add(lesson);
@@ -414,7 +426,7 @@ public class DataLoader {
         boolean done = XMLUtil.getAndParseBooleanValueOfChild(parameter, "done");
         String type = XMLUtil.getValueOfChild(parameter, "type");
         Exam.Type realType;
-        if (Objects.equals(type, "written_exam"))
+        if (type.equals("written_exam"))
             realType = Exam.Type.written;
         else
             realType = Exam.Type.raking;

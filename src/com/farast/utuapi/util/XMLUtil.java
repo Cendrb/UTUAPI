@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.Objects;
 
 /**
  * Created by cendr_000 on 25.07.2016.
@@ -45,7 +44,7 @@ public final class XMLUtil {
 
     public static int getAndParseIntValueOfChild(Element element, String elementName) throws NumberFormatException {
         String childValue = getValueOfChild(element, elementName);
-        if (!Objects.equals(childValue, ""))
+        if (!childValue.isEmpty())
             return Integer.parseInt(childValue);
         else
             return -1;

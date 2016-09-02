@@ -13,10 +13,10 @@ import java.util.ArrayList;
 public class Main {
 
     public static void main(String[] args) {
-        DataLoader loader = new DataLoader("http://localhost:3000");
+        DataLoader loader = new DataLoader("http://utu.herokuapp.com");
         try {
             loader.loadPredata();
-            boolean res = loader.login("penis@gmail.com", "penis");
+            boolean res = loader.login("cendrb@gmail.com", "");
             loader.load(1);
             System.out.print("kana");
         } catch (IOException e) {
