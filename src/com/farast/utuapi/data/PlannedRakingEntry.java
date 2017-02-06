@@ -8,11 +8,11 @@ public class PlannedRakingEntry implements Identifiable {
     private int id;
     private String description;
     private boolean finished;
-    private int grade;
+    private String grade;
     private int sortingOrder;
     private ClassMember classMember;
 
-    public PlannedRakingEntry(int id, String description, boolean finished, int grade, int sortingOrder, ClassMember classMember) {
+    public PlannedRakingEntry(int id, String description, boolean finished, String grade, int sortingOrder, ClassMember classMember) {
         this.id = id;
         this.description = description;
         this.finished = finished;
@@ -34,7 +34,7 @@ public class PlannedRakingEntry implements Identifiable {
         return finished;
     }
 
-    public int getGrade() {
+    public String getGrade() {
         return grade;
     }
 

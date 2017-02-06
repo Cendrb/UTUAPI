@@ -368,7 +368,7 @@ public class DataLoader {
                                     int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
                                     String description = XMLUtil.getValueOfChild(parameter, "description");
                                     boolean finished = XMLUtil.getAndParseBooleanValueOfChild(parameter, "finished");
-                                    int grade = XMLUtil.getAndParseIntValueOfChild(parameter, "grade");
+                                    String grade = XMLUtil.getValueOfChild(parameter, "grade");
                                     int sortingOrder = XMLUtil.getAndParseIntValueOfChild(parameter, "sorting_order");
                                     ClassMember classMember = CollectionUtil.findById(predata.classMembersList, XMLUtil.getAndParseIntValueOfChild(parameter, "class_member_id"));
                                     PlannedRakingEntry plannedRakingEntry = new PlannedRakingEntry(id, description, finished, grade, sortingOrder, classMember);
