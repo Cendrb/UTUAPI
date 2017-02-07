@@ -44,6 +44,7 @@ public class DataLoader {
     private Comparator<TEItem> tesComparator;
     private Comparator<Event> eventsComparator;
     private Comparator<Article> articlesComparator;
+    private Comparator<PlannedRakingEntry> plannedRakingEntriesComparator;
 
     private User currentUser = null;
 
@@ -81,6 +82,17 @@ public class DataLoader {
                 if (!o2.isPublished())
                     return 1;
                 return o2.getPublishedOn().compareTo(o1.getPublishedOn());
+            }
+        };
+        plannedRakingEntriesComparator = new Comparator<PlannedRakingEntry>() {
+            @Override
+            public int compare(PlannedRakingEntry o1, PlannedRakingEntry o2) {
+                if (o1.isFinished())
+                    return -1;
+                else if (o2.isFinished())
+                    return 1;
+                else
+                    return 0;
             }
         };
 
@@ -223,14 +235,14 @@ public class DataLoader {
 
                                         Subject subject;
                                         int subjectId = XMLUtil.getAndParseIntValueOfChild(parameter, "subject_id");
-                                        if(subjectId == -1)
+                                        if (subjectId == -1)
                                             subject = null;
                                         else
                                             subject = CollectionUtil.findById(predata.subjectsList, subjectId);
 
                                         Teacher teacher;
                                         int teacherId = XMLUtil.getAndParseIntValueOfChild(parameter, "teacher_id");
-                                        if(teacherId == -1)
+                                        if (teacherId == -1)
                                             teacher = null;
                                         else
                                             teacher = CollectionUtil.findById(predata.teachersList, teacherId);
@@ -376,6 +388,7 @@ public class DataLoader {
                                     plannedRakingEntries.add(plannedRakingEntry);
                                 }
                             });
+                            Collections.sort(plannedRakingEntries, plannedRakingEntriesComparator);
                             PlannedRakingRound plannedRakingRound = new PlannedRakingRound(id, roundNumber, plannedRakingEntries);
                             plannedRakingRoundsList.add(plannedRakingRound);
                             plannedRakingRounds.add(plannedRakingRound);
