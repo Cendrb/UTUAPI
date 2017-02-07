@@ -108,7 +108,7 @@ public class DataLoader {
             case subject:
                 return CollectionUtil.findById(predata.subjectsList, id);
             default:
-                throw new UnsupportedOperationException("Unable to find this type of items");
+                throw new UnsupportedOperationException("Unable to find this type of item");
         }
     }
 
