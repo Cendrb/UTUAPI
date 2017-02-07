@@ -65,6 +65,6 @@ public class PlannedRakingList implements Identifiable, Infoable, OnelineReprese
     }
 
     public PlannedRakingRound getCurrentRound() {
-        return plannedRakingRounds.get(0);
+        return plannedRakingRounds.get(plannedRakingRounds.size() - 1);
     }
 }
