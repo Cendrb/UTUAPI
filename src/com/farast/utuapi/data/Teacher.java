@@ -1,5 +1,8 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+
 /**
  * Created by cendr_000 on 28.07.2016.
  */
@@ -25,5 +28,10 @@ public class Teacher implements Identifiable {
 
     public String getAbbr() {
         return abbr;
+    }
+
+    @Override
+    public UtuType getUtuType() {
+        return UtuType.TEACHER;
     }
 }

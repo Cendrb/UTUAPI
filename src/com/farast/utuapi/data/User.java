@@ -1,5 +1,8 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+
 /**
  * Created by cendr_000 on 16.08.2016.
  */
@@ -37,5 +40,10 @@ public class User implements Identifiable {
 
     public ClassMember getClassMember() {
         return classMember;
+    }
+
+    @Override
+    public UtuType getUtuType() {
+        return UtuType.USER;
     }
 }

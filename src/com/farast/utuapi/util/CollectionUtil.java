@@ -1,6 +1,6 @@
 package com.farast.utuapi.util;
 
-import com.farast.utuapi.data.Identifiable;
+import com.farast.utuapi.data.interfaces.Identifiable;
 import com.farast.utuapi.util.functional_interfaces.Predicate;
 
 import java.util.ArrayList;

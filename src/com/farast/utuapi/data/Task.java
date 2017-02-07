@@ -1,5 +1,10 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+import com.farast.utuapi.data.interfaces.Infoable;
+import com.farast.utuapi.data.interfaces.TEItem;
+import com.farast.utuapi.data.interfaces.Updatable;
 import com.farast.utuapi.util.FormData;
 
 import java.util.ArrayList;
@@ -90,5 +95,10 @@ public class Task implements Updatable, Identifiable, TEItem, Infoable {
     @Override
     public String getOnelineRepresentation() {
         return title;
+    }
+
+    @Override
+    public UtuType getUtuType() {
+        return UtuType.TASK;
     }
 }

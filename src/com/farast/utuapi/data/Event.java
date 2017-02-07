@@ -1,8 +1,14 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+import com.farast.utuapi.data.interfaces.Infoable;
+import com.farast.utuapi.data.interfaces.Updatable;
 import com.farast.utuapi.util.FormData;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by cendr_000 on 26.07.2016.
@@ -103,5 +109,10 @@ public class Event implements Updatable, Identifiable, Infoable {
     @Override
     public String getOnelineRepresentation() {
         return title;
+    }
+
+    @Override
+    public UtuType getUtuType() {
+        return UtuType.EVENT;
     }
 }

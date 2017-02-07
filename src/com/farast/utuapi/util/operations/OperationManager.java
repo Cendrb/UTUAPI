@@ -58,7 +58,7 @@ public class OperationManager {
 
         @Override
         public String getMessage() {
-            return "Instance of operation \"" + mOperation.getName() + "\" is already running";
+            return "Instance of operation \"" + mOperation.getClass().getSimpleName() + "\" is already running";
         }
     }
 
@@ -71,7 +71,7 @@ public class OperationManager {
 
         @Override
         public String getMessage() {
-            return "Instance of operation \"" + mOperation.getName() + "\" is not running, so it cannot be stopped";
+            return "Instance of operation \"" + mOperation.getClass().getSimpleName() + "\" is not running, so it cannot be stopped";
         }
     }
 }

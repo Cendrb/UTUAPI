@@ -1,5 +1,9 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+import com.farast.utuapi.data.interfaces.Infoable;
+import com.farast.utuapi.data.interfaces.Updatable;
 import com.farast.utuapi.util.FormData;
 
 import java.util.ArrayList;
@@ -101,12 +105,17 @@ public class Article implements Updatable, Identifiable, Infoable {
     }
 
     @Override
+    public String getOnelineRepresentation() {
+        return title;
+    }
+
+    @Override
     public String getTypeString() {
         return "article";
     }
 
     @Override
-    public String getOnelineRepresentation() {
-        return title;
+    public UtuType getUtuType() {
+        return UtuType.ARTICLE;
     }
 }

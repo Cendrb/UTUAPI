@@ -1,6 +1,10 @@
-package com.farast.utuapi.data;
+package com.farast.utuapi.data.interfaces;
 
-import java.util.ArrayList;
+import com.farast.utuapi.data.AdditionalInfo;
+import com.farast.utuapi.data.Lesson;
+import com.farast.utuapi.data.Sgroup;
+import com.farast.utuapi.data.Subject;
+
 import java.util.Date;
 import java.util.List;
 

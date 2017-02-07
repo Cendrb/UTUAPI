@@ -1,5 +1,9 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+import com.farast.utuapi.data.interfaces.OnelineRepresentable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,5 +36,10 @@ public class Sclass implements Identifiable, OnelineRepresentable {
     @Override
     public String getOnelineRepresentation() {
         return name;
+    }
+
+    @Override
+    public UtuType getUtuType() {
+        return UtuType.SCHOOL_DAY;
     }
 }

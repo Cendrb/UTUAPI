@@ -1,4 +1,6 @@
-package com.farast.utuapi.data;
+package com.farast.utuapi.data.interfaces;
+
+import com.farast.utuapi.data.AdditionalInfo;
 
 import java.util.List;
 

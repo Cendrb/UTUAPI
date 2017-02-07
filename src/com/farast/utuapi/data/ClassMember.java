@@ -1,5 +1,8 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,5 +41,10 @@ public class ClassMember implements Identifiable {
 
     public List<Sgroup> getSgroups() {
         return new ArrayList<>(sgroups);
+    }
+
+    @Override
+    public UtuType getUtuType() {
+        return UtuType.CLASS_MEMBER;
     }
 }

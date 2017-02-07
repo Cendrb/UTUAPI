@@ -1,5 +1,8 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,5 +30,10 @@ public class GroupCategory implements Identifiable {
 
     public List<Sgroup> getSgroups() {
         return new ArrayList<>(sgroups);
+    }
+
+    @Override
+    public UtuType getUtuType() {
+        return UtuType.GROUP_CATEGORY;
     }
 }

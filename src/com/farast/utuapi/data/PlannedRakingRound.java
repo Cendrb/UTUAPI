@@ -1,5 +1,8 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+import com.farast.utuapi.data.interfaces.OnelineRepresentable;
 import com.farast.utuapi.util.CollectionUtil;
 import com.farast.utuapi.util.functional_interfaces.Predicate;
 
@@ -68,5 +71,10 @@ public class PlannedRakingRound implements Identifiable, OnelineRepresentable {
                 return !object.isFinished();
             }
         }).size();
+    }
+
+    @Override
+    public UtuType getUtuType() {
+        return UtuType.PLANNED_RAKING_ROUND;
     }
 }

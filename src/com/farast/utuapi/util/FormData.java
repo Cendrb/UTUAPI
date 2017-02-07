@@ -1,8 +1,10 @@
 package com.farast.utuapi.util;
 
-import com.farast.utuapi.data.Identifiable;
+import com.farast.utuapi.data.interfaces.Identifiable;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by cendr_000 on 17.08.2016.

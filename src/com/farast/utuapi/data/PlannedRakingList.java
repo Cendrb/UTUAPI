@@ -1,6 +1,9 @@
 package com.farast.utuapi.data;
 
-import com.farast.utuapi.util.CollectionUtil;
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+import com.farast.utuapi.data.interfaces.Infoable;
+import com.farast.utuapi.data.interfaces.OnelineRepresentable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -66,5 +69,10 @@ public class PlannedRakingList implements Identifiable, Infoable, OnelineReprese
 
     public PlannedRakingRound getCurrentRound() {
         return plannedRakingRounds.get(plannedRakingRounds.size() - 1);
+    }
+
+    @Override
+    public UtuType getUtuType() {
+        return UtuType.PLANNED_RAKING_LIST;
     }
 }

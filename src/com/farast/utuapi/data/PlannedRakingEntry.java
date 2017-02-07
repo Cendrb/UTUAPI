@@ -1,5 +1,8 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+
 /**
  * Created by cendr_000 on 26.08.2016.
  */
@@ -44,5 +47,10 @@ public class PlannedRakingEntry implements Identifiable {
 
     public ClassMember getClassMember() {
         return classMember;
+    }
+
+    @Override
+    public UtuType getUtuType() {
+        return UtuType.PLANNED_RAKING_ENTRY;
     }
 }

@@ -1,5 +1,9 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+import com.farast.utuapi.data.interfaces.OnelineRepresentable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,5 +48,10 @@ public class Timetable implements Identifiable, OnelineRepresentable {
     @Override
     public String toString() {
         return getOnelineRepresentation();
+    }
+
+    @Override
+    public UtuType getUtuType() {
+        return UtuType.TIMETABLE;
     }
 }

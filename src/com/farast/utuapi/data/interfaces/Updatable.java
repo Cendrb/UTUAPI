@@ -1,4 +1,4 @@
-package com.farast.utuapi.data;
+package com.farast.utuapi.data.interfaces;
 
 import com.farast.utuapi.util.FormData;
 

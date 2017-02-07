@@ -14,6 +14,6 @@ public class SclassDoesNotExistException extends Exception {
 
     @Override
     public String getMessage() {
-        return String.format("Supplied sclass id(%s) doesn't correspond to any sclass object in database", recordNotFoundException.getRecordId());
+        return String.format("Supplied SCLASS id(%s) doesn't correspond to any SCLASS object in database", recordNotFoundException.getRecordId());
     }
 }

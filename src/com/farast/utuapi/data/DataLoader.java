@@ -1,5 +1,8 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.TEItem;
+import com.farast.utuapi.data.interfaces.Updatable;
 import com.farast.utuapi.util.*;
 import com.farast.utuapi.util.functional_interfaces.Action;
 import com.farast.utuapi.util.operations.*;
@@ -107,17 +110,17 @@ public class DataLoader {
 
     public Object findUtuItem(int id, UtuType itemType) {
         switch (itemType) {
-            case additional_info:
+            case ADDITIONAL_INFO:
                 return CollectionUtil.findById(additionalInfosList, id);
-            case event:
+            case EVENT:
                 return CollectionUtil.findById(eventsList, id);
-            case task:
+            case TASK:
                 return CollectionUtil.findById(tasksList, id);
-            case exam:
+            case EXAM:
                 return CollectionUtil.findById(examsList, id);
-            case article:
+            case ARTICLE:
                 return CollectionUtil.findById(articlesList, id);
-            case subject:
+            case SUBJECT:
                 return CollectionUtil.findById(predata.subjectsList, id);
             default:
                 throw new UnsupportedOperationException("Unable to find this type of item");
@@ -674,7 +677,7 @@ public class DataLoader {
         }
 
         private String[] updateCU(Updatable processedItem, Updatable replacedItem) throws IOException, AdminRequiredException, SclassUnknownException {
-            Operation operation = new CUOperation(processedItem.getClass().getSimpleName(), replacedItem);
+            Operation operation = new CUOperation(processedItem.getUtuType(), replacedItem);
             try {
                 operationListeners.startOperation(operation);
 
@@ -949,7 +952,7 @@ public class DataLoader {
                 sgroupsList.add(allSgroup);
 
                 // sclasses
-                final NodeList sclasses = XMLUtil.getNodeList(utuElement, "sclasses", "sclass");
+                final NodeList sclasses = XMLUtil.getNodeList(utuElement, "sclasses", "SCLASS");
                 classMembersList.clear();
                 sclassesList.clear();
                 XMLUtil.forEachElement(sclasses, new Action<Element>() {

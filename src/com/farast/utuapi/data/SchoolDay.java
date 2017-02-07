@@ -1,5 +1,8 @@
 package com.farast.utuapi.data;
 
+import com.farast.utuapi.data.common.UtuType;
+import com.farast.utuapi.data.interfaces.Identifiable;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -29,5 +32,10 @@ public class SchoolDay implements Identifiable {
 
     public List<Lesson> getLessons() {
         return new ArrayList<>(lessons);
+    }
+
+    @Override
+    public UtuType getUtuType() {
+        return UtuType.SCHOOL_DAY;
     }
 }
