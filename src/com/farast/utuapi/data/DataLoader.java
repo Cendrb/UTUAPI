@@ -80,7 +80,7 @@ public class DataLoader {
                     return -1;
                 if (!o2.isPublished())
                     return 1;
-                return o1.getPublishedOn().compareTo(o2.getPublishedOn());
+                return o2.getPublishedOn().compareTo(o1.getPublishedOn());
             }
         };
 
