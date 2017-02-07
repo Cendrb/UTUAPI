@@ -952,7 +952,7 @@ public class DataLoader {
                 sgroupsList.add(allSgroup);
 
                 // sclasses
-                final NodeList sclasses = XMLUtil.getNodeList(utuElement, "sclasses", "SCLASS");
+                final NodeList sclasses = XMLUtil.getNodeList(utuElement, "sclasses", "sclass");
                 classMembersList.clear();
                 sclassesList.clear();
                 XMLUtil.forEachElement(sclasses, new Action<Element>() {
