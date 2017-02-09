@@ -431,6 +431,8 @@ public class DataLoader {
             });
             notifier.notifyRakings();
 
+            notifier.notifyLoadFinished();
+
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } finally {
@@ -874,6 +876,7 @@ public class DataLoader {
         OnDataSetListener rakingsListener;
         OnDataSetListener timetablesListener;
         OnDataSetListener anyDataListener;
+        OnDataSetListener onLoadFinishedListener;
 
         private void notifyRakings() {
             tryNotify(rakingsListener);
@@ -909,6 +912,10 @@ public class DataLoader {
             tryNotify(anyDataListener);
         }
 
+        private void notifyLoadFinished() {
+            tryNotify(onLoadFinishedListener);
+        }
+
         private void tryNotify(OnDataSetListener listener) {
             if (listener != null)
                 listener.onDataSetChanged();
@@ -940,6 +947,10 @@ public class DataLoader {
 
         public void setAnyDataListener(OnDataSetListener anyDataListener) {
             this.anyDataListener = anyDataListener;
+        }
+
+        public void setOnLoadFinishedListener(OnDataSetListener onLoadFinishedListener) {
+            this.onLoadFinishedListener = onLoadFinishedListener;
         }
     }
 
