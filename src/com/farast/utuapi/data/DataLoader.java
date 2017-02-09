@@ -43,8 +43,9 @@ public class DataLoader {
     private List<PlannedRakingList> plannedRakingsListsList;
     private List<PlannedRakingRound> plannedRakingRoundsList;
     private List<PlannedRakingEntry> plannedRakingEntriesList;
+    private List<Service> servicesList;
 
-    private List<ClassMember> currentServicesList;
+    private Service currentService;
 
     private Comparator<TEItem> tesComparator;
     private Comparator<Event> eventsComparator;
@@ -65,8 +66,7 @@ public class DataLoader {
         plannedRakingsListsList = new ArrayList<>();
         plannedRakingRoundsList = new ArrayList<>();
         plannedRakingEntriesList = new ArrayList<>();
-
-        currentServicesList = new ArrayList<>();
+        servicesList = new ArrayList<>();
 
         tesComparator = new Comparator<TEItem>() {
             @Override
@@ -282,15 +282,31 @@ public class DataLoader {
 
             Element utuElement = XMLUtil.parseXml(responseStream);
 
-            // current service
-            final NodeList currentServices = XMLUtil.getNodeList(utuElement, "current_service", "class_member_id");
-            currentServicesList.clear();
-            XMLUtil.forEachElement(currentServices, new Action<Element>() {
+            // services
+            final NodeList services = XMLUtil.getNodeList(utuElement, "services", "service");
+            servicesList.clear();
+            XMLUtil.forEachElement(services, new Action<Element>() {
                 @Override
                 public void accept(Element parameter) {
-                    currentServicesList.add(CollectionUtil.findById(predata.classMembersList, Integer.parseInt(parameter.getTextContent())));
+                    try {
+                        int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+                        Date start = XMLUtil.getAndParseDateValueOfChild(parameter, "service_start");
+                        Date end = XMLUtil.getAndParseDateValueOfChild(parameter, "service_end");
+                        ClassMember first = CollectionUtil.findById(predata.classMembersList, XMLUtil.getAndParseIntValueOfChild(parameter, "first_mate_id"));
+                        ClassMember second = CollectionUtil.findById(predata.classMembersList, XMLUtil.getAndParseIntValueOfChild(parameter, "second_mate_id"));
+                        servicesList.add(new Service(id, start, end, first, second));
+                    } catch (ParseException e) {
+                        throw new DateFormatException(e);
+                    }
                 }
             });
+
+            // current service
+            Element currentServiceElement = XMLUtil.getElement(utuElement, "current_service");
+            currentService = null;
+            if (XMLUtil.exists(currentServiceElement, "id")) {
+                currentService = CollectionUtil.findById(servicesList, XMLUtil.getAndParseIntValueOfChild(utuElement, "id"));
+            }
 
             // additional infos
             final NodeList additionalInfos = XMLUtil.getNodeList(utuElement, "additional_infos_global", "additional_info");
@@ -511,8 +527,8 @@ public class DataLoader {
         return CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
     }
 
-    public List<ClassMember> getCurrentServices() {
-        return currentServicesList;
+    public Service getCurrentService() {
+        return currentService;
     }
 
     public List<Teacher> getTeachers() {
@@ -589,6 +605,10 @@ public class DataLoader {
 
     public List<PlannedRakingEntry> getPlannedRakingEntriesList() {
         return new ArrayList<>(plannedRakingEntriesList);
+    }
+
+    public List<Service> getServices() {
+        return new ArrayList<>(servicesList);
     }
 
     public Sgroup getAllSgroup() {
