@@ -44,6 +44,8 @@ public class DataLoader {
     private List<PlannedRakingRound> plannedRakingRoundsList;
     private List<PlannedRakingEntry> plannedRakingEntriesList;
 
+    private List<ClassMember> currentServicesList;
+
     private Comparator<TEItem> tesComparator;
     private Comparator<Event> eventsComparator;
     private Comparator<Article> articlesComparator;
@@ -64,6 +66,7 @@ public class DataLoader {
         plannedRakingRoundsList = new ArrayList<>();
         plannedRakingEntriesList = new ArrayList<>();
 
+        currentServicesList = new ArrayList<>();
 
         tesComparator = new Comparator<TEItem>() {
             @Override
@@ -278,6 +281,16 @@ public class DataLoader {
             InputStream responseStream = HTTPUtil.openStream(baseUrl + "/api/data?sclass_id=" + sclass.getId());
 
             Element utuElement = XMLUtil.parseXml(responseStream);
+
+            // current service
+            final NodeList currentServices = XMLUtil.getNodeList(utuElement, "current_service", "class_member_id");
+            currentServicesList.clear();
+            XMLUtil.forEachElement(currentServices, new Action<Element>() {
+                @Override
+                public void accept(Element parameter) {
+                    currentServicesList.add(CollectionUtil.findById(predata.classMembersList, Integer.parseInt(parameter.getTextContent())));
+                }
+            });
 
             // additional infos
             final NodeList additionalInfos = XMLUtil.getNodeList(utuElement, "additional_infos_global", "additional_info");
@@ -496,6 +509,10 @@ public class DataLoader {
             }
         });
         return CollectionUtil.findByIds(additionalInfosList, additionalInfoIds);
+    }
+
+    public List<ClassMember> getCurrentServices() {
+        return currentServicesList;
     }
 
     public List<Teacher> getTeachers() {
