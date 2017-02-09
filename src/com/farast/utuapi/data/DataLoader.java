@@ -47,6 +47,8 @@ public class DataLoader {
 
     private Service currentService;
 
+    private Date lastDataUpdate;
+
     private Comparator<TEItem> tesComparator;
     private Comparator<Event> eventsComparator;
     private Comparator<Article> articlesComparator;
@@ -199,6 +201,7 @@ public class DataLoader {
         }
         loadTimetablesData(sclass);
         loadUtuData(sclass);
+        lastDataUpdate = new Date();
         dataLoaded = true;
     }
 
@@ -611,6 +614,14 @@ public class DataLoader {
 
     public List<Service> getServices() {
         return new ArrayList<>(servicesList);
+    }
+
+    public Date getLastDataUpdate() {
+        if (lastDataUpdate == null) {
+            return null;
+        } else {
+            return new Date(lastDataUpdate.getTime());
+        }
     }
 
     public Sgroup getAllSgroup() {
