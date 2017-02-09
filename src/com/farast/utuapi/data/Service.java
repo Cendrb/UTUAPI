@@ -2,14 +2,13 @@ package com.farast.utuapi.data;
 
 import com.farast.utuapi.data.common.UtuType;
 import com.farast.utuapi.data.interfaces.Identifiable;
-import com.farast.utuapi.data.interfaces.OnelineRepresentable;
 
 import java.util.Date;
 
 /**
  * Created by cendr on 09/02/2017.
  */
-public class Service implements Identifiable, OnelineRepresentable {
+public class Service implements Identifiable {
 
     private int id;
     private Date start;
@@ -39,11 +38,6 @@ public class Service implements Identifiable, OnelineRepresentable {
 
     public ClassMember getSecondMember() {
         return secondMember;
-    }
-
-    @Override
-    public String getOnelineRepresentation() {
-        return null;
     }
 
     @Override
