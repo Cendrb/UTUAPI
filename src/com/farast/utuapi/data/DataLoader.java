@@ -853,33 +853,40 @@ public class DataLoader {
         OnDataSetListener articlesListener;
         OnDataSetListener rakingsListener;
         OnDataSetListener timetablesListener;
+        OnDataSetListener anyDataListener;
 
         private void notifyRakings() {
             tryNotify(rakingsListener);
+            tryNotify(anyDataListener);
         }
 
         private void notifyTimetables() {
             tryNotify(timetablesListener);
+            tryNotify(anyDataListener);
         }
 
         private void notifyEvents() {
-            tryNotify(eventsListener);
             Collections.sort(eventsList, eventsComparator);
+            tryNotify(eventsListener);
+            tryNotify(anyDataListener);
         }
 
         private void notifyExams() {
-            tryNotify(examsListener);
             Collections.sort(examsList, tesComparator);
+            tryNotify(examsListener);
+            tryNotify(anyDataListener);
         }
 
         private void notifyTasks() {
-            tryNotify(tasksListener);
             Collections.sort(tasksList, tesComparator);
+            tryNotify(tasksListener);
+            tryNotify(anyDataListener);
         }
 
         private void notifyArticles() {
-            tryNotify(articlesListener);
             Collections.sort(articlesList, articlesComparator);
+            tryNotify(articlesListener);
+            tryNotify(anyDataListener);
         }
 
         private void tryNotify(OnDataSetListener listener) {
@@ -909,6 +916,10 @@ public class DataLoader {
 
         public void setTimetablesListener(OnDataSetListener timetablesListener) {
             this.timetablesListener = timetablesListener;
+        }
+
+        public void setAnyDataListener(OnDataSetListener anyDataListener) {
+            this.anyDataListener = anyDataListener;
         }
     }
 
