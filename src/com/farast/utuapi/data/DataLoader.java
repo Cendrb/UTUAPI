@@ -893,88 +893,62 @@ public class DataLoader {
     }
 
     public class Notifier {
-        OnDataSetListener eventsListener;
-        OnDataSetListener examsListener;
-        OnDataSetListener tasksListener;
-        OnDataSetListener articlesListener;
-        OnDataSetListener rakingsListener;
-        OnDataSetListener timetablesListener;
-        OnDataSetListener anyDataListener;
-        OnDataSetListener onLoadFinishedListener;
+
+        HashMap<EventType, List<OnDataSetListener>> listenersHashmap;
+
+        public Notifier() {
+            listenersHashmap = new HashMap<>();
+            for (EventType eventType : EventType.values()) {
+                listenersHashmap.put(eventType, new ArrayList<OnDataSetListener>());
+            }
+        }
 
         private void notifyRakings() {
-            tryNotify(rakingsListener);
-            tryNotify(anyDataListener);
+            tryNotify(EventType.RAKINGS);
         }
 
         private void notifyTimetables() {
-            tryNotify(timetablesListener);
-            tryNotify(anyDataListener);
+            tryNotify(EventType.TIMETABLES);
         }
 
         private void notifyEvents() {
             Collections.sort(eventsList, eventsComparator);
-            tryNotify(eventsListener);
-            tryNotify(anyDataListener);
+            tryNotify(EventType.EVENTS);
         }
 
         private void notifyExams() {
             Collections.sort(examsList, tesComparator);
-            tryNotify(examsListener);
-            tryNotify(anyDataListener);
+            tryNotify(EventType.EXAMS);
         }
 
         private void notifyTasks() {
             Collections.sort(tasksList, tesComparator);
-            tryNotify(tasksListener);
-            tryNotify(anyDataListener);
+            tryNotify(EventType.TASKS);
         }
 
         private void notifyArticles() {
             Collections.sort(articlesList, articlesComparator);
-            tryNotify(articlesListener);
-            tryNotify(anyDataListener);
+            tryNotify(EventType.ARTICLES);
         }
 
         private void notifyLoadFinished() {
-            tryNotify(onLoadFinishedListener);
+            tryNotify(EventType.LOAD_FINISHED);
         }
 
-        private void tryNotify(OnDataSetListener listener) {
-            if (listener != null)
-                listener.onDataSetChanged();
+        private void tryNotify(EventType eventType) {
+            for (OnDataSetListener listener : listenersHashmap.get(eventType)) {
+                if (listener != null) {
+                    listener.onDataSetChanged();
+                }
+            }
         }
 
-        public void setEventsListener(OnDataSetListener eventsListener) {
-            this.eventsListener = eventsListener;
+        public void addListener(EventType eventType, OnDataSetListener listener) {
+            listenersHashmap.get(eventType).add(listener);
         }
 
-        public void setExamsListener(OnDataSetListener examsListener) {
-            this.examsListener = examsListener;
-        }
-
-        public void setTasksListener(OnDataSetListener tasksListener) {
-            this.tasksListener = tasksListener;
-        }
-
-        public void setArticlesListener(OnDataSetListener articlesListener) {
-            this.articlesListener = articlesListener;
-        }
-
-        public void setRakingsListener(OnDataSetListener rakingsListener) {
-            this.rakingsListener = rakingsListener;
-        }
-
-        public void setTimetablesListener(OnDataSetListener timetablesListener) {
-            this.timetablesListener = timetablesListener;
-        }
-
-        public void setAnyDataListener(OnDataSetListener anyDataListener) {
-            this.anyDataListener = anyDataListener;
-        }
-
-        public void setOnLoadFinishedListener(OnDataSetListener onLoadFinishedListener) {
-            this.onLoadFinishedListener = onLoadFinishedListener;
+        public void removeListener(EventType eventType, OnDataSetListener listener) {
+            listenersHashmap.get(eventType).remove(listener);
         }
     }
 
@@ -1114,4 +1088,6 @@ public class DataLoader {
             return loaded;
         }
     }
+
+    public enum EventType {EVENTS, EXAMS, TASKS, ARTICLES, RAKINGS, TIMETABLES, LOAD_FINISHED}
 }
