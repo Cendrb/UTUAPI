@@ -15,8 +15,9 @@ public class Lesson implements Identifiable {
     private String eventName;
     private Subject subject;
     private Teacher teacher;
+    private LessonTiming lessonTiming;
 
-    Lesson(int id, int serialNumber, String room, boolean notNormal, String notNormalComment, String eventName, Subject subject, Teacher teacher) {
+    Lesson(int id, int serialNumber, String room, boolean notNormal, String notNormalComment, String eventName, Subject subject, Teacher teacher, LessonTiming lessonTiming) {
         this.id = id;
         this.serialNumber = serialNumber;
         this.room = room;
@@ -25,6 +26,7 @@ public class Lesson implements Identifiable {
         this.eventName = eventName;
         this.subject = subject;
         this.teacher = teacher;
+        this.lessonTiming = lessonTiming;
     }
 
     @Override
@@ -58,6 +60,10 @@ public class Lesson implements Identifiable {
 
     public Teacher getTeacher() {
         return teacher;
+    }
+
+    public LessonTiming getLessonTiming() {
+        return lessonTiming;
     }
 
     @Override

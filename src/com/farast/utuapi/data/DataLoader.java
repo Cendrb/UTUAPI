@@ -5,6 +5,7 @@ import com.farast.utuapi.data.interfaces.TEItem;
 import com.farast.utuapi.data.interfaces.Updatable;
 import com.farast.utuapi.util.*;
 import com.farast.utuapi.util.functional_interfaces.Action;
+import com.farast.utuapi.util.functional_interfaces.Predicate;
 import com.farast.utuapi.util.operations.*;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -236,7 +237,7 @@ public class DataLoader {
                                     @Override
                                     public void accept(Element parameter) {
                                         int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
-                                        int serialNumber = XMLUtil.getAndParseIntValueOfChild(parameter, "serial_number");
+                                        final int serialNumber = XMLUtil.getAndParseIntValueOfChild(parameter, "serial_number");
                                         String room = XMLUtil.getValueOfChild(parameter, "room");
                                         boolean notNormal = XMLUtil.getAndParseBooleanValueOfChild(parameter, "not_normal");
                                         String notNormalComment = XMLUtil.getValueOfChild(parameter, "not_normal_comment");
@@ -255,7 +256,19 @@ public class DataLoader {
                                             teacher = null;
                                         else
                                             teacher = CollectionUtil.findById(predata.teachersList, teacherId);
-                                        Lesson lesson = new Lesson(id, serialNumber, room, notNormal, notNormalComment, eventName, subject, teacher);
+
+                                        List<LessonTiming> lessonTimings = CollectionUtil.filter(predata.lessonTimingsList, new Predicate<LessonTiming>() {
+                                            @Override
+                                            public boolean test(LessonTiming object) {
+                                                return object.getSerialNumber() == serialNumber;
+                                            }
+                                        });
+                                        LessonTiming timing = null;
+                                        if (lessonTimings.size() > 0) {
+                                            timing = lessonTimings.get(0);
+                                        }
+
+                                        Lesson lesson = new Lesson(id, serialNumber, room, notNormal, notNormalComment, eventName, subject, teacher, timing);
                                         lessons.add(lesson);
                                         lessonsList.add(lesson);
                                     }
@@ -975,6 +988,7 @@ public class DataLoader {
         private List<Sgroup> sgroupsList;
         private List<Teacher> teachersList;
         private List<ClassMember> classMembersList;
+        private List<LessonTiming> lessonTimingsList;
 
         private Predata() {
             sclassesList = new ArrayList<>();
@@ -983,6 +997,7 @@ public class DataLoader {
             sgroupsList = new ArrayList<>();
             teachersList = new ArrayList<>();
             classMembersList = new ArrayList<>();
+            lessonTimingsList = new ArrayList<>();
             loaded = false;
         }
 
@@ -991,7 +1006,7 @@ public class DataLoader {
             try {
                 operationListeners.startOperation(operation);
                 InputStream responseStream = HTTPUtil.openStream(baseUrl + "/api/pre_data");
-                Element utuElement = XMLUtil.parseXml(responseStream);
+                final Element utuElement = XMLUtil.parseXml(responseStream);
 
                 // group categories
                 final NodeList groupCategories = XMLUtil.getNodeList(utuElement, "group_categories", "group_category");
@@ -1069,6 +1084,20 @@ public class DataLoader {
                         String name = XMLUtil.getValueOfChild(parameter, "name");
                         String abbr = XMLUtil.getValueOfChild(parameter, "abbr");
                         teachersList.add(new Teacher(id, name, abbr));
+                    }
+                });
+
+                // lesson timings
+                final NodeList lessonTimings = XMLUtil.getNodeList(utuElement, "lesson_timings", "lesson_timing");
+                lessonTimingsList.clear();
+                XMLUtil.forEachElement(lessonTimings, new Action<Element>() {
+                    @Override
+                    public void accept(Element parameter) {
+                        int id = XMLUtil.getAndParseIntValueOfChild(parameter, "id");
+                        int serialNumber = XMLUtil.getAndParseIntValueOfChild(parameter, "serial_number");
+                        AbsoluteTime start = AbsoluteTime.parse(XMLUtil.getAndParseIntValueOfChild(parameter, "start"));
+                        AbsoluteTime duration = AbsoluteTime.parse(XMLUtil.getAndParseIntValueOfChild(parameter, "duration"));
+                        lessonTimingsList.add(new LessonTiming(id, serialNumber, start, duration));
                     }
                 });
 
