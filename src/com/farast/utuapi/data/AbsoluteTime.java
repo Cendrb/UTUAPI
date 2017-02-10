@@ -2,6 +2,9 @@ package com.farast.utuapi.data;
 
 import com.farast.utuapi.util.NumberFormatUtil;
 
+import java.util.Calendar;
+import java.util.Date;
+
 /**
  * Created by cendr on 10/02/2017.
  */
@@ -29,6 +32,15 @@ public class AbsoluteTime {
         return NumberFormatUtil.formatWithLeadingZeros(hours, 2) + ":" +
                 NumberFormatUtil.formatWithLeadingZeros(minutes, 2) + ":" +
                 NumberFormatUtil.formatWithLeadingZeros(seconds, 2);
+    }
+
+    public Date getOffsetDate(Date base) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(base);
+        calendar.add(Calendar.HOUR, hours);
+        calendar.add(Calendar.MINUTE, minutes);
+        calendar.add(Calendar.SECOND, seconds);
+        return calendar.getTime();
     }
 
     public int getHours() {
