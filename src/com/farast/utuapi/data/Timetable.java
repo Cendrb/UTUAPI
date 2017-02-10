@@ -54,4 +54,30 @@ public class Timetable implements Identifiable, OnelineRepresentable {
     public UtuType getUtuType() {
         return UtuType.TIMETABLE;
     }
+
+    public static Timetable getBestTimetableForClassMember(List<Timetable> timetables, ClassMember classMember) {
+        List<Sgroup> sgroups = classMember.getSgroups();
+        int bestPoints = 0;
+        Timetable bestTimetable = null;
+        for (Timetable timetable : timetables) {
+            int thisPoints = 0;
+            for (Sgroup sgroup : timetable.getValidSgroups()) {
+                if (sgroups.contains(sgroup)) {
+                    thisPoints++;
+                }
+            }
+            if (thisPoints > bestPoints) {
+                bestTimetable = timetable;
+            }
+        }
+        if (bestTimetable == null) {
+            if (timetables.size() > 0) {
+                return timetables.get(0);
+            } else {
+                return null;
+            }
+        } else {
+            return bestTimetable;
+        }
+    }
 }
