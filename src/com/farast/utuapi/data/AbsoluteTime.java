@@ -23,6 +23,10 @@ public class AbsoluteTime {
         this.seconds = seconds;
     }
 
+    public int getTotalSeconds() {
+        return hours * 3600 + minutes * 60 + seconds;
+    }
+
     public String getHoursMinutesString() {
         return NumberFormatUtil.formatWithLeadingZeros(hours, 2) + ":" +
                 NumberFormatUtil.formatWithLeadingZeros(minutes, 2);
