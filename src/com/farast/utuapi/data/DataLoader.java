@@ -637,6 +637,10 @@ public class DataLoader {
         }
     }
 
+    public List<LessonTiming> getLessonTimingsList() {
+        return new ArrayList<>(predata.lessonTimingsList);
+    }
+
     public Sgroup getAllSgroup() {
         return predata.allSgroup;
     }
