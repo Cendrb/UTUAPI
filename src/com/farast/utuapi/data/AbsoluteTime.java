@@ -23,6 +23,10 @@ public class AbsoluteTime {
         this.seconds = seconds;
     }
 
+    public static AbsoluteTime add(AbsoluteTime first, AbsoluteTime second) {
+        return AbsoluteTime.parse(first.getTotalSeconds() + second.getTotalSeconds());
+    }
+
     public int getTotalSeconds() {
         return hours * 3600 + minutes * 60 + seconds;
     }
